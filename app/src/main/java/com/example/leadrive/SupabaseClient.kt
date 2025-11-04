@@ -9,8 +9,9 @@ import io.github.jan.supabase.storage.Storage
 
 object SupabaseClient {
 
-    private const val SUPABASE_URL = "YOUR_SUPABASE_URL"
-    private const val SUPABASE_KEY = "YOUR_SUPABASE_KEY"
+    private const val SUPABASE_URL = "https://djgznqnnekcjoafbzfcr.supabase.co"
+    private const val SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZ3pucW5uZWtjam9hZmJ6ZmNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5MDc0MTIsImV4cCI6MjA3NjQ4MzQxMn0.sd_27c9ArpIfrbYOe3kNQyvB8pwlh70LqiJk8KsOSHc"
+
 
     val client: SupabaseClient = createSupabaseClient(
         supabaseUrl = SUPABASE_URL,
