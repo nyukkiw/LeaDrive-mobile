@@ -1,5 +1,3 @@
-import androidx.navigation.compose.navigation
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -48,26 +46,30 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.8.0")
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(platform( libs.androidx.compose.bom))
+    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
-    implementation("io.github.jan-tennert.supabase:postgrest-kt:3.2.6")
-    implementation("io.github.jan-tennert.supabase:auth-kt:3.2.6")
-    implementation("io.github.jan-tennert.supabase:realtime-kt:3.2.6")
-    implementation("io.github.jan-tennert.supabase:storage-kt:3.2.6")
-    implementation("io.ktor:ktor-client-android:3.1.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
-    implementation(libs.androidx.navigation.runtime.ktx)
+    implementation(libs.androidx.material.icons.extended)
 
+
+
+    // Now, you can add individual Supabase libraries without specifying their versions
+    implementation(libs.supabase.auth)
+    implementation(libs.supabase.postgrest)
+    implementation(libs.supabase.storage)
+    implementation(libs.supabase.realtime)
+
+
+
+    implementation(libs.androidx.navigation.runtime.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform( libs.androidx.compose.bom))
+    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-
 }
