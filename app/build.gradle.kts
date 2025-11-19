@@ -60,6 +60,8 @@ dependencies {
     implementation("io.ktor:ktor-client-android:3.3.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 
+    implementation("at.favre.lib:bcrypt:0.10.2")
+    implementation("io.coil-kt:coil-compose:2.5.0")
     implementation(libs.androidx.navigation.runtime.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

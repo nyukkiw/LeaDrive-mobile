@@ -25,9 +25,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.compose.foundation.Image // <-- TAMBAHKAN IMPORT INI
 import androidx.compose.ui.res.painterResource // <-- TAMBAHKAN IMPORT INI
 
@@ -51,7 +53,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable("login") { LoginScreen(navController) }
                         composable("loginPeserta") { LoginPeserta(navController=navController) }
-
+                        composable("loginInstruktur") { LoginInstruktur(navController = navController) }
                         composable("Daftar") {
                             daftar(navController = navController)
                         }
@@ -63,6 +65,23 @@ class MainActivity : ComponentActivity() {
                         composable("setting_peserta"){
                             SettingPesertaScreen(navController = navController)
                         }
+                        composable(
+                            "dashboardInstruktur/{nama}?photoUrl={photoUrl}",
+                            arguments = listOf(
+                                navArgument("nama") { type = NavType.StringType },
+                                navArgument("photoUrl") {
+                                    type = NavType.StringType
+                                    nullable = true
+                                }
+                            )
+                        ) { backStackEntry ->
+                            DashboardInstruktur(
+                                nama = backStackEntry.arguments?.getString("nama") ?: "",
+                                photoUrl = backStackEntry.arguments?.getString("photoUrl"),
+                                navController = navController
+                            )
+                        }
+                        composable("jadwalKursus") { JadwalKursusScreen(navController = navController) }
                     }
                 }
             }
@@ -106,7 +125,7 @@ fun LoginScreen(navController: NavController, modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { "" },
+            onClick = { navController.navigate("loginInstruktur") },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
             modifier = Modifier.fillMaxWidth().height(50.dp)
         ) {
@@ -123,6 +142,3 @@ fun GreetingPreview() {
         LoginScreen(navController)
     }
 }
-
-
-
