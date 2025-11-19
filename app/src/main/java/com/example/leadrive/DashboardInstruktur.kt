@@ -130,7 +130,7 @@ fun DashboardInstruktur(nama: String, photoUrl: String?, navController: NavContr
                 .padding(innerPadding),
             contentAlignment = Alignment.Center
         ) {
-            Text("Dashboard Instruktur", fontSize = 24.sp)
+            Text("Belum ada Kursus yang Diambil", fontSize = 24.sp)
         }
     }
 }

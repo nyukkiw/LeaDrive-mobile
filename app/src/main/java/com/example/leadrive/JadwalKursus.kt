@@ -1,6 +1,8 @@
 package com.example.leadrive
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -34,17 +36,22 @@ fun JadwalKursusScreen(navController: NavController) {
 
     val supabase = SupabaseClient.client // ✅ pakai client dari file lain
 
-    LaunchedEffect(Unit) {
+    fun fetchPemesanan() {
         scope.launch {
+            isLoading = true
             try {
                 val result = supabase.from("pemesanan").select().decodeList<Pemesanan>()
-                daftarPemesanan = result
+                daftarPemesanan = result.filter { it.status_pemesanan == "Tersedia" }
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
                 isLoading = false
             }
         }
+    }
+
+    LaunchedEffect(Unit) {
+        fetchPemesanan()
     }
 
     Scaffold(
@@ -71,16 +78,54 @@ fun JadwalKursusScreen(navController: NavController) {
             when {
                 isLoading -> Text("Memuat data...", fontSize = 18.sp)
                 daftarPemesanan.isEmpty() -> Text("Pesanan Masih Kosong", fontSize = 20.sp)
-                else -> Column(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text("Daftar Pemesanan", fontSize = 22.sp)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    daftarPemesanan.forEach {
-                        Text("ID: ${it.id_pemesanan} | Status: ${it.status_pemesanan}")
+                else -> {
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("Daftar Pemesanan", fontSize = 22.sp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LazyColumn {
+                            items(daftarPemesanan) { pemesanan ->
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column {
+                                            Text("ID: ${pemesanan.id_pemesanan}")
+                                            Text("Status: ${pemesanan.status_pemesanan}")
+                                        }
+                                        Button(onClick = {
+                                            scope.launch {
+                                                try {
+                                                    supabase.from("pemesanan")
+                                                        .update(mapOf("status_pemesanan" to "Diambil")) {
+                                                            filter {
+                                                                eq("id_pemesanan", pemesanan.id_pemesanan)
+                                                            }
+                                                        }
+                                                    fetchPemesanan() // Refresh list
+                                                } catch (e: Exception) {
+                                                    e.printStackTrace()
+                                                }
+                                            }
+                                        }) {
+                                            Text("Ambil")
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
