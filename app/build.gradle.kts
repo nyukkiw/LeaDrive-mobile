@@ -52,17 +52,13 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
-    implementation(libs.androidx.material.icons.extended)
-
-
-
-    // Now, you can add individual Supabase libraries without specifying their versions
-    implementation(libs.supabase.auth)
-    implementation(libs.supabase.postgrest)
-    implementation(libs.supabase.storage)
-    implementation(libs.supabase.realtime)
-
-
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("io.github.jan-tennert.supabase:postgrest-kt:3.2.6")
+    implementation("io.github.jan-tennert.supabase:auth-kt:3.2.6")
+    implementation("io.github.jan-tennert.supabase:realtime-kt:3.2.6")
+    implementation("io.github.jan-tennert.supabase:storage-kt:3.2.6")
+    implementation("io.ktor:ktor-client-android:3.3.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 
     implementation(libs.androidx.navigation.runtime.ktx)
     testImplementation(libs.junit)

@@ -20,19 +20,15 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
+import android.widget.Toast
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
 
 @kotlinx.serialization.Serializable
 data class User(
-    val id: Int? = null,
-    val name: String,
     val email: String,
-    val email_verified_at: String? = null,
     val password: String,
-    val remember_token: String? = null,
-    val created_at: String? = null,
-    val updated_at: String? = null,
-    val nomor_hp: String? = null,
-    val status: String? = null
+    val name: String
 
 )
 
@@ -46,6 +42,7 @@ fun LoginPeserta(navController: NavController) {
 
     val scope = rememberCoroutineScope()
     val supabase = SupabaseClient.client
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -96,14 +93,118 @@ fun LoginPeserta(navController: NavController) {
             onClick = {
 
                 scope.launch {
-                    val person = supabase.from("users").select(columns = Columns.list("name","email" )){
-                        filter{
-                            eq("email",email)
+                    val inputNama=username
+                    val inputEmail=email
+                    val inputPassword=password
 
+                    try {
+//                        val cekagain = supabase.postgrest["users"].select(columns = Columns.list("name", "email", "password")){
+//                            filter{
+//                                eq("email", "anyu@gmail.com")
+//                            }
+//                        }
+//                        Log.d("cekagain", "isi dari response: ${cekagain.data}")
+//
+//                        val allUsers = supabase.from("users").select().decodeList<User>()
+//                        Log.d("allUserCek","isi: $allUsers")
+
+                        val ambilData = supabase.from("users").select().decodeList<User>()
+                        val cariData = ambilData.find { it.email.equals(email, ignoreCase = true) }
+                        Log.d("dataEmailInput,","data data yang diinput: ${inputEmail},${email}")
+                        Log.d("test email","ini data yang di dapat: ${cariData?.email},${cariData?.password},${cariData?.name}")
+
+                        if((cariData?.email == inputEmail && cariData.password == inputPassword) && cariData.name == inputNama){
+
+                            // SIMPAN USER DI SHARED PREFERENCES
+                            val prefs = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
+                            prefs.edit()
+                                .putString("user_email", cariData.email)
+                                .putString("user_name", cariData.name)
+                                .apply()
+
+                            Toast.makeText(context,"Login Berhasil", Toast.LENGTH_SHORT).show()
+                            navController.navigate("beranda_Peserta")
+                        }else{
+                            Toast.makeText(context,"Login Gagal, periksa kembali email dan password", Toast.LENGTH_LONG).show()
                         }
+
+                        Log.d("cekResponse", "isi dari response: ${ambilData.size}")
+                    }catch (e :Exception){
+                        Log.d("catchResponse", "isi dari response: $e")
                     }
-                    println(person)
+
+
+
                 }
+
+
+
+
+
+                // Prevent multiple clicks while loading
+//                if (isLoading) return@Button
+//
+//                // Validate input fields
+//                if (email.isBlank() || password.isBlank()) {
+//                    message = "Email and password cannot be empty."
+//                    return@Button
+//                }
+//
+//                isLoading = true
+//                message = ""
+//
+//                scope.launch {
+//                   try {
+//                       // 1. Log input pengguna untuk memastikan tidak ada spasi yang tidak diinginkan
+//                       Log.d("LoginPeserta", "Attempting login with email: [${email.trim()}]")
+//
+//
+//                       Log.d("LoginDebug", "Email yang dicari: '$email'")
+//
+//                       // Fetch the user data including the password for comparison
+//                       val response = supabase.from("users").select (columns = Columns.list("email", "password")){
+//                           filter{
+//                               eq("email",email)
+//                           }
+//                       }
+//
+//                       Log.d("LoginResponse", "isi dari response: $response")
+//                        val person = response.decodeList<User>()
+//                       Log.d("LoginDebug", "Jumlah user ditemukan: ${person.size}")
+//                       Log.d("LoginDebug", "Users: $person")
+//                       Log.d("usersRespon", "isi: ${person.size}")
+//                       if (person != null) {
+//                           val pers=person[0]
+//                           // User found, now check the password
+//                           // NOTE: This is a basic check. For production, use a secure hashing method.
+//                           if (pers.password == password) {
+//                               // Password matches
+//                               message = "Login successful! Welcome, ${pers.name}."
+//                               Toast.makeText(context, "Login Berhasil", Toast.LENGTH_SHORT).show()
+//                               // Navigate to the home screen upon successful login
+//                               navController.navigate("berandaPeserta") {
+//                                   // Clear the back stack to prevent going back to the login screen
+//                                   popUpTo("login") { inclusive = true }
+//                               }
+//                           } else {
+//                               // Password does not match
+//                               message = "Invalid password."
+//                           }
+//                       } else {
+//                           // No user found with that email
+//                           message = "Invalid email "
+//                       }
+//                   }catch (e: Exception){
+//                       // Handle exceptions, e.g., network errors
+//                       message = "An error occurred: ${e.message}"
+//                       Log.e("LoginPeserta", "Error during login", e)
+//                   }finally {
+//                       isLoading = false // Reset loading state
+//                   }
+//
+//
+//
+//                }
 
 
             }, modifier = Modifier.fillMaxWidth()
