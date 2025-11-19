@@ -112,7 +112,7 @@ fun LoginPeserta(navController: NavController) {
                         val cariData = ambilData.find { it.email.equals(email, ignoreCase = true) }
                         Log.d("dataEmailInput,","data data yang diinput: ${inputEmail},${email}")
                         Log.d("test email","ini data yang di dapat: ${cariData?.email},${cariData?.password},${cariData?.name}")
-
+                        Log.d("alo","halo")
                         if((cariData?.email == inputEmail && cariData.password == inputPassword) && cariData.name == inputNama){
 
                             // SIMPAN USER DI SHARED PREFERENCES
