@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -20,7 +21,7 @@ import kotlinx.serialization.Serializable
 data class Pemesanan(
     val id_pemesanan: Int,
     val id_paket: Int,
-    val tanggal_pemesanan: String,
+    val tanggal_pemesanan: String? = null, // DATE → nullable
     val status_pemesanan: String,
     val id_user: Int,
     val latitude: String? = null,
@@ -30,19 +31,38 @@ data class Pemesanan(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JadwalKursusScreen(navController: NavController) {
+
     val scope = rememberCoroutineScope()
+    val supabase = SupabaseClient.client
+
     var daftarPemesanan by remember { mutableStateOf<List<Pemesanan>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
-
-    val supabase = SupabaseClient.client // ✅ pakai client dari file lain
 
     fun fetchPemesanan() {
         scope.launch {
             isLoading = true
             try {
-                val result = supabase.from("pemesanan").select().decodeList<Pemesanan>()
-                daftarPemesanan = result.filter { it.status_pemesanan == "Tersedia" }
+                val result = supabase.from("pemesanan")
+                    .select(
+                        columns = Columns.list(
+                            "id_pemesanan",
+                            "id_paket",
+                            "tanggal_pemesanan",
+                            "status_pemesanan",
+                            "id_user",
+                            "latitude",
+                            "longitude"
+                        )
+                    )
+                    .decodeList<Pemesanan>()
+
+                println("=== RAW DATA DARI SUPABASE ===")
+                println(result)
+
+                daftarPemesanan = result.filter { it.status_pemesanan == "pending" }
+
             } catch (e: Exception) {
+                println("=== ERROR FETCH PEMESANAN ===")
                 e.printStackTrace()
             } finally {
                 isLoading = false
@@ -60,68 +80,64 @@ fun JadwalKursusScreen(navController: NavController) {
                 title = { Text("Jadwal Kursus") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Kembali"
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
                     }
                 }
             )
         }
-    ) { innerPadding ->
+    ) { inner ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(inner),
             contentAlignment = Alignment.Center
         ) {
             when {
                 isLoading -> Text("Memuat data...", fontSize = 18.sp)
-                daftarPemesanan.isEmpty() -> Text("Pesanan Masih Kosong", fontSize = 20.sp)
+                daftarPemesanan.isEmpty() -> Text("Pesanan masih kosong", fontSize = 20.sp)
                 else -> {
-                    Column(
+                    LazyColumn(
                         modifier = Modifier
                             .padding(16.dp)
-                            .fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .fillMaxSize()
                     ) {
-                        Text("Daftar Pemesanan", fontSize = 22.sp)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        LazyColumn {
-                            items(daftarPemesanan) { pemesanan ->
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 4.dp),
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Column {
-                                            Text("ID: ${pemesanan.id_pemesanan}")
-                                            Text("Status: ${pemesanan.status_pemesanan}")
-                                        }
-                                        Button(onClick = {
+                        items(daftarPemesanan) { p ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 6.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text("ID Pemesanan: ${p.id_pemesanan}")
+                                    Text("ID Paket: ${p.id_paket}")
+                                    Text("Tanggal: ${p.tanggal_pemesanan ?: "-"}")
+                                    Text("ID User: ${p.id_user}")
+                                    Text("Status: ${p.status_pemesanan}")
+
+                                    Spacer(Modifier.height(8.dp))
+
+                                    Button(
+                                        onClick = {
                                             scope.launch {
                                                 try {
                                                     supabase.from("pemesanan")
-                                                        .update(mapOf("status_pemesanan" to "Diambil")) {
+                                                        .update(
+                                                            mapOf("status_pemesanan" to "Diambil")
+                                                        ) {
                                                             filter {
-                                                                eq("id_pemesanan", pemesanan.id_pemesanan)
+                                                                eq("id_pemesanan", p.id_pemesanan)
                                                             }
                                                         }
-                                                    fetchPemesanan() // Refresh list
+
+                                                    fetchPemesanan()
+
                                                 } catch (e: Exception) {
                                                     e.printStackTrace()
                                                 }
                                             }
-                                        }) {
-                                            Text("Ambil")
                                         }
+                                    ) {
+                                        Text("Ambil")
                                     }
                                 }
                             }
