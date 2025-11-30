@@ -66,8 +66,9 @@ class MainActivity : ComponentActivity() {
                             SettingPesertaScreen(navController = navController)
                         }
                         composable(
-                            "dashboardInstruktur/{nama}?photoUrl={photoUrl}",
+                            "dashboardInstruktur/{idInstruktur}/{nama}?photoUrl={photoUrl}",
                             arguments = listOf(
+                                navArgument("idInstruktur") { type = NavType.IntType },
                                 navArgument("nama") { type = NavType.StringType },
                                 navArgument("photoUrl") {
                                     type = NavType.StringType
@@ -76,12 +77,21 @@ class MainActivity : ComponentActivity() {
                             )
                         ) { backStackEntry ->
                             DashboardInstruktur(
+                                idInstruktur = backStackEntry.arguments?.getInt("idInstruktur") ?: -1,
                                 nama = backStackEntry.arguments?.getString("nama") ?: "",
                                 photoUrl = backStackEntry.arguments?.getString("photoUrl"),
                                 navController = navController
                             )
                         }
-                        composable("jadwalKursus") { JadwalKursusScreen(navController = navController) }
+                        composable(
+                            "jadwalKursus/{idInstruktur}",
+                            arguments = listOf(navArgument("idInstruktur") { type = NavType.IntType })
+                        ) { backStackEntry ->
+                            JadwalKursusScreen(
+                                navController = navController,
+                                idInstruktur = backStackEntry.arguments?.getInt("idInstruktur") ?: -1
+                            )
+                        }
                     }
                 }
             }

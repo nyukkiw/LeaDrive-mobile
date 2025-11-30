@@ -117,7 +117,7 @@ fun LoginInstruktur(navController: NavController) {
 
                                 if (nameMatches && emailMatches) {
                                     val photoUrl = userCandidate.foto_profil?.let { URLEncoder.encode(it, StandardCharsets.UTF_8.toString()) } ?: ""
-                                    navController.navigate("dashboardInstruktur/${userCandidate.nama}?photoUrl=$photoUrl")
+                                    navController.navigate("dashboardInstruktur/${userCandidate.id_instruktur}/${userCandidate.nama}?photoUrl=$photoUrl")
                                 } else {
                                     message = "Username dan Email tidak cocok satu sama lain"
                                 }

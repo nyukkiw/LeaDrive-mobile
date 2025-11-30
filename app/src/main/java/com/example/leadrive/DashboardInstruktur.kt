@@ -20,7 +20,7 @@ import coil.compose.rememberAsyncImagePainter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardInstruktur(nama: String, photoUrl: String?, navController: NavController) {
+fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navController: NavController) {
     var showDialog by remember { mutableStateOf(false) }
 
     if (showDialog) {
@@ -99,7 +99,7 @@ fun DashboardInstruktur(nama: String, photoUrl: String?, navController: NavContr
                     // Tombol Jadwal Kursus
                     NavigationBarItem(
                         selected = false,
-                        onClick = { navController.navigate("jadwalKursus") },
+                        onClick = { navController.navigate("jadwalKursus/$idInstruktur") },
                         icon = { Icon(Icons.Filled.DateRange, contentDescription = "Jadwal Kursus") },
                         label = { Text("Jadwal") },
                         colors = NavigationBarItemDefaults.colors(

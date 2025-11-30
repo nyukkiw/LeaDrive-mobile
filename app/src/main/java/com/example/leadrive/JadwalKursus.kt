@@ -31,9 +31,18 @@ data class Pemesanan(
     val longitude: String? = null
 )
 
+@kotlinx.serialization.Serializable
+data class JadwalInsertRequest( //tambahan data class insert ke jadwal_kursus
+    val id_pemesanan: Int,
+    val tanggal: String,
+    val jam_mulai: String,
+    val jam_selesai: String,
+    val status: String,
+    val id_instruktur: Int
+)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun JadwalKursusScreen(navController: NavController) {
+fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
 
     val scope = rememberCoroutineScope()
     val supabase = SupabaseClient.client
@@ -80,16 +89,17 @@ fun JadwalKursusScreen(navController: NavController) {
         scope.launch {
             try {
                 val tanggal = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                supabase.from("jadwal_kursus").insert(
-                    mapOf(
-                        "id_pemesanan" to idPemesanan,
-                        "tanggal" to tanggal,
-                        "jam_mulai" to "08:00:00",
-                        "jam_selesai" to "10:00:00",
-                        "status" to "terjadwal",
-                        "id_instruktur" to idInstruktur
-                    )
+
+                val body = JadwalInsertRequest(
+                    id_pemesanan = idPemesanan,
+                    tanggal = tanggal,
+                    jam_mulai = "08:00:00",
+                    jam_selesai = "10:00:00",
+                    status = "terjadwal",
+                    id_instruktur = idInstruktur
                 )
+
+                supabase.from("jadwal_kursus").insert(body)
 
                 println("=== INSERT JADWAL KURSUS BERHASIL ===")
 
@@ -172,7 +182,7 @@ fun JadwalKursusScreen(navController: NavController) {
                                                     // 2. Insert ke jadwal_kursus
                                                     insertJadwalKursus(
                                                         idPemesanan = p.id_pemesanan,
-                                                        idInstruktur = 1 // TODO: ganti sesuai instruktur login
+                                                        idInstruktur = idInstruktur
                                                     )
 
                                                     // 3. Refresh list
