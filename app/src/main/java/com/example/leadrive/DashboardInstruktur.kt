@@ -2,6 +2,8 @@ package com.example.leadrive
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -17,12 +19,66 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.Columns
+import kotlinx.coroutines.launch
+import com.example.leadrive.Jadwal
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navController: NavController) {
+
     var showDialog by remember { mutableStateOf(false) }
 
+    val supabase = SupabaseClient.client
+    val scope = rememberCoroutineScope()
+
+    var daftarJadwal by remember { mutableStateOf<List<Jadwal>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    //------------------------------------------------------
+    // FETCH DATA JADWAL UNTUK INSTRUKTUR
+    //------------------------------------------------------
+    fun fetchJadwalInstruktur() {
+        scope.launch {
+            isLoading = true
+            try {
+                val result = supabase.from("jadwal_kursus")
+                    .select(
+                        Columns.list(
+                            "id_jadwal",
+                            "id_pemesanan",
+                            "tanggal",
+                            "jam_mulai",
+                            "id_instruktur"
+                        )
+                    ) {
+                        filter {
+                            eq("id_instruktur", idInstruktur)
+                        }
+                    }
+                    .decodeList<Jadwal>()
+
+                daftarJadwal = result
+
+            } catch (e: Exception) {
+                println("=== ERROR FETCH JADWAL ===")
+                e.printStackTrace()
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    // Load saat masuk halaman
+    LaunchedEffect(idInstruktur) {
+        fetchJadwalInstruktur()
+    }
+
+    //------------------------------------------------------
+    // ALERT LOGOUT
+    //------------------------------------------------------
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
@@ -50,6 +106,9 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
         )
     }
 
+    //------------------------------------------------------
+    // UI
+    //------------------------------------------------------
     Scaffold(
         topBar = {
             Card(
@@ -59,16 +118,14 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Row(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
+                    modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Image(
                         painter = rememberAsyncImagePainter(
                             model = photoUrl,
-                            error = painterResource(id = R.drawable.ic_launcher_background), // Ganti dengan gambar error default
-                            placeholder = painterResource(id = R.drawable.ic_launcher_foreground) // Ganti dengan gambar placeholder default
+                            error = painterResource(id = R.drawable.ic_launcher_background),
+                            placeholder = painterResource(id = R.drawable.ic_launcher_foreground)
                         ),
                         contentDescription = "Foto Profil",
                         contentScale = ContentScale.Crop,
@@ -76,47 +133,50 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
                             .size(64.dp)
                             .clip(CircleShape)
                     )
+
                     Spacer(modifier = Modifier.width(16.dp))
+
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(text = nama, fontSize = 20.sp, style = MaterialTheme.typography.titleLarge)
-                        Text(text = "Instruktur", fontSize = 14.sp, style = MaterialTheme.typography.bodyMedium)
+                        Text(nama, fontSize = 20.sp, style = MaterialTheme.typography.titleLarge)
+                        Text("Instruktur", fontSize = 14.sp)
                     }
+
                     IconButton(onClick = { showDialog = true }) {
                         Icon(Icons.Filled.ExitToApp, contentDescription = "Logout")
                     }
                 }
             }
         },
+
         bottomBar = {
-            BottomAppBar(
-                containerColor = Color(0xFFFF9800),
-            ) {
+            BottomAppBar(containerColor = Color(0xFFFF9800)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceAround,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Tombol Jadwal Kursus
+
                     NavigationBarItem(
                         selected = false,
                         onClick = { navController.navigate("jadwalKursus/$idInstruktur") },
-                        icon = { Icon(Icons.Filled.DateRange, contentDescription = "Jadwal Kursus") },
+                        icon = { Icon(Icons.Filled.DateRange, contentDescription = "Jadwal") },
                         label = { Text("Jadwal") },
                         colors = NavigationBarItemDefaults.colors(
                             unselectedIconColor = Color.White,
-                            unselectedTextColor = Color.White,
+                            selectedIconColor = Color.White,
+                            selectedTextColor = Color.White,
                             indicatorColor = Color(0xFFFF9800)
                         )
                     )
-                    // Tombol Status Kursus
+
                     NavigationBarItem(
                         selected = false,
                         onClick = { navController.navigate("statusKursus/$idInstruktur") },
-                        icon = { Icon(Icons.Filled.List, contentDescription = "Status Kursus") },
+                        icon = { Icon(Icons.Filled.List, contentDescription = "Status") },
                         label = { Text("Status") },
                         colors = NavigationBarItemDefaults.colors(
                             unselectedIconColor = Color.White,
-                            unselectedTextColor = Color.White,
+                            selectedIconColor = Color.White,
                             indicatorColor = Color(0xFFFF9800)
                         )
                     )
@@ -124,13 +184,45 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
             }
         }
     ) { innerPadding ->
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
-            contentAlignment = Alignment.Center
+                .padding(innerPadding)
         ) {
-            Text("Belum ada Kursus yang Diambil", fontSize = 24.sp)
+
+            when {
+                isLoading -> Text(
+                    "Memuat jadwal...",
+                    modifier = Modifier.align(Alignment.Center),
+                    fontSize = 20.sp
+                )
+
+                daftarJadwal.isEmpty() -> Text(
+                    "Belum ada kursus yang diambil",
+                    modifier = Modifier.align(Alignment.Center),
+                    fontSize = 20.sp
+                )
+
+                else -> LazyColumn(modifier = Modifier.padding(16.dp)) {
+                    items(daftarJadwal) { j ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 6.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text("ID Jadwal: ${j.id_jadwal}")
+                                Text("ID Pemesanan: ${j.id_pemesanan}")
+                                Text("Tanggal: ${j.tanggal}")
+                                Text("Jam Mulai: ${j.jam_mulai ?: "-"}")
+                                Text("Instruktur ID: ${j.id_instruktur ?: "-"}")
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
