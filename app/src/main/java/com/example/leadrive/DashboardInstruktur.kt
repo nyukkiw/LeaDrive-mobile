@@ -22,8 +22,6 @@ import coil.compose.rememberAsyncImagePainter
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.launch
-import com.example.leadrive.Jadwal
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,7 +49,8 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
                             "id_pemesanan",
                             "tanggal",
                             "jam_mulai",
-                            "id_instruktur"
+                            "id_instruktur",
+                            "pemesanan(status_pemesanan)"
                         )
                     ) {
                         filter {
@@ -59,6 +58,7 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
                         }
                     }
                     .decodeList<Jadwal>()
+
 
                 daftarJadwal = result
 
@@ -168,7 +168,6 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
                             indicatorColor = Color(0xFFFF9800)
                         )
                     )
-
                     NavigationBarItem(
                         selected = false,
                         onClick = { navController.navigate("statusKursus/$idInstruktur") },
@@ -213,16 +212,38 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
                             colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
+
                                 Text("ID Jadwal: ${j.id_jadwal}")
                                 Text("ID Pemesanan: ${j.id_pemesanan}")
                                 Text("Tanggal: ${j.tanggal}")
                                 Text("Jam Mulai: ${j.jam_mulai ?: "-"}")
                                 Text("Instruktur ID: ${j.id_instruktur ?: "-"}")
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                val status = j.pemesanan?.status_pemesanan
+
+                                Text(
+                                    "Status: ${status ?: "-"}",
+                                    color = warnaStatus(status),
+                                    fontSize = 14.sp
+                                )
                             }
                         }
                     }
+
+
                 }
             }
         }
     }
 }
+
+fun warnaStatus(status: String?): Color {
+    return when (status) {
+        "Diambil" -> Color(0xFFFFC107) // Kuning
+        "Progres" -> Color(0xFFD32F2F) // Merah
+        else -> Color.Black            // Default
+    }
+}
+

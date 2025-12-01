@@ -17,16 +17,6 @@ import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
-@Serializable
-data class Pemesanan(
-    val id_pemesanan: Int,
-    val id_paket: Int,
-    val tanggal_pemesanan: String? = null,
-    val status_pemesanan: String,
-    val id_user: Int,
-    val latitude: String? = null,
-    val longitude: String? = null
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,28 +28,20 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
     var daftarPemesanan by remember { mutableStateOf<List<Pemesanan>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // -----------------------------------------------------
+    // -----------------------
     // FETCH PEMESANAN PENDING
-    // -----------------------------------------------------
+    // -----------------------
     fun fetchPemesanan() {
         scope.launch {
             isLoading = true
             try {
                 val result = supabase.from("pemesanan")
-                    .select(
-                        columns = Columns.list(
-                            "id_pemesanan",
-                            "id_paket",
-                            "tanggal_pemesanan",
-                            "status_pemesanan",
-                            "id_user",
-                            "latitude",
-                            "longitude"
-                        )
-                    )
+                    .select()
                     .decodeList<Pemesanan>()
 
-                daftarPemesanan = result.filter { it.status_pemesanan == "pending" }
+                daftarPemesanan = result.filter {
+                    it.status_pemesanan.equals("pending", ignoreCase = true)
+                }
 
             } catch (e: Exception) {
                 println("=== ERROR FETCH PEMESANAN ===")
@@ -70,9 +52,9 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
         }
     }
 
-    // -----------------------------------------------------
+    // -------------------------------------
     // UPDATE id_instruktur di jadwal_kursus
-    // -----------------------------------------------------
+    // -------------------------------------
     fun updateJadwalInstruktur(idPemesanan: Int, idInstruktur: Int) {
         scope.launch {
             try {
@@ -139,20 +121,17 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
                                     .padding(vertical = 6.dp)
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
-
                                     Text("ID Pemesanan: ${p.id_pemesanan}")
                                     Text("ID Paket: ${p.id_paket}")
                                     Text("Tanggal: ${p.tanggal_pemesanan ?: "-"}")
                                     Text("ID User: ${p.id_user}")
                                     Text("Status: ${p.status_pemesanan}")
-
                                     Spacer(Modifier.height(10.dp))
-
                                     Button(
                                         onClick = {
                                             scope.launch {
                                                 try {
-                                                    // 1. UPDATE PEMESANAN STATUS → DIAMBIL
+                                                    // UPDATE STATUS PEMESANAN
                                                     supabase.from("pemesanan")
                                                         .update(
                                                             mapOf("status_pemesanan" to "Diambil")
@@ -161,22 +140,20 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
                                                                 eq("id_pemesanan", p.id_pemesanan)
                                                             }
                                                         }
-
-                                                    // 2. UPDATE jadwal_kursus → isi id_instruktur
+                                                    // UPDATE TABEL jadwal_kursus
                                                     updateJadwalInstruktur(
                                                         idPemesanan = p.id_pemesanan,
                                                         idInstruktur = idInstruktur
                                                     )
-
-                                                    // 3. REFRESH LIST
                                                     fetchPemesanan()
-
                                                 } catch (e: Exception) {
+                                                    println("=== ERROR UPDATE PEMESANAN ===")
                                                     e.printStackTrace()
                                                 }
                                             }
                                         }
-                                    ) {
+                                    )
+                                    {
                                         Text("Ambil")
                                     }
                                 }

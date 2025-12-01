@@ -8,5 +8,11 @@ data class Jadwal(
     val id_pemesanan: Int,
     val tanggal: String,
     val jam_mulai: String?,
-    val id_instruktur: Int?
+    val id_instruktur: Int?,
+    val pemesanan: PemesananStatus? = null
+)
+
+@Serializable
+data class PemesananStatus(
+    val status_pemesanan: String?
 )
