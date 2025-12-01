@@ -16,9 +16,6 @@ import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import java.text.SimpleDateFormat
-import java.util.*
-import java.time.LocalDate
 
 @Serializable
 data class Pemesanan(
@@ -31,28 +28,19 @@ data class Pemesanan(
     val longitude: String? = null
 )
 
-@kotlinx.serialization.Serializable
-data class JadwalInsertRequest( //tambahan data class insert ke jadwal_kursus
-    val id_pemesanan: Int,
-    val tanggal: String,
-    val jam_mulai: String,
-    val jam_selesai: String,
-    val status: String,
-    val id_instruktur: Int
-)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
 
-    val scope = rememberCoroutineScope()
     val supabase = SupabaseClient.client
+    val scope = rememberCoroutineScope()
 
     var daftarPemesanan by remember { mutableStateOf<List<Pemesanan>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
-    //-----------------------------------------------------
-    // FUNGSI FETCH PEMESANAN
-    //-----------------------------------------------------
+    // -----------------------------------------------------
+    // FETCH PEMESANAN PENDING
+    // -----------------------------------------------------
     fun fetchPemesanan() {
         scope.launch {
             isLoading = true
@@ -82,42 +70,36 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
         }
     }
 
-    //-----------------------------------------------------
-    // INSERT KE JADWAL KURSUS
-    //-----------------------------------------------------
-    fun insertJadwalKursus(idPemesanan: Int, idInstruktur: Int) {
+    // -----------------------------------------------------
+    // UPDATE id_instruktur di jadwal_kursus
+    // -----------------------------------------------------
+    fun updateJadwalInstruktur(idPemesanan: Int, idInstruktur: Int) {
         scope.launch {
             try {
-                val tanggal = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                supabase.from("jadwal_kursus")
+                    .update(
+                        mapOf("id_instruktur" to idInstruktur)
+                    ) {
+                        filter {
+                            eq("id_pemesanan", idPemesanan)
+                        }
+                    }
 
-                val body = JadwalInsertRequest(
-                    id_pemesanan = idPemesanan,
-                    tanggal = tanggal,
-                    jam_mulai = "08:00:00",
-                    jam_selesai = "10:00:00",
-                    status = "terjadwal",
-                    id_instruktur = idInstruktur
-                )
-
-                supabase.from("jadwal_kursus").insert(body)
-
-                println("=== INSERT JADWAL KURSUS BERHASIL ===")
+                println("=== UPDATE JADWAL KURSUS BERHASIL ===")
 
             } catch (e: Exception) {
-                println("=== ERROR INSERT JADWAL KURSUS ===")
+                println("=== ERROR UPDATE JADWAL KURSUS ===")
                 e.printStackTrace()
             }
         }
     }
 
-    // FETCH SAAT AWAL MASUK HALAMAN
+    // FETCH DATA SAAT MASUK HALAMAN
     LaunchedEffect(Unit) {
         fetchPemesanan()
     }
 
-    //-----------------------------------------------------
-    // UI UTAMA
-    //-----------------------------------------------------
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -141,7 +123,7 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
             when {
                 isLoading -> Text("Memuat data...", fontSize = 18.sp)
 
-                daftarPemesanan.isEmpty() -> Text("Pesanan masih kosong", fontSize = 20.sp)
+                daftarPemesanan.isEmpty() -> Text("Tidak ada pemesanan pending", fontSize = 20.sp)
 
                 else -> {
                     LazyColumn(
@@ -156,7 +138,6 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
                                     .fillMaxWidth()
                                     .padding(vertical = 6.dp)
                             ) {
-
                                 Column(modifier = Modifier.padding(16.dp)) {
 
                                     Text("ID Pemesanan: ${p.id_pemesanan}")
@@ -171,21 +152,23 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
                                         onClick = {
                                             scope.launch {
                                                 try {
-                                                    // 1. Update pemesanan
+                                                    // 1. UPDATE PEMESANAN STATUS → DIAMBIL
                                                     supabase.from("pemesanan")
-                                                        .update(mapOf("status_pemesanan" to "Diambil")) {
+                                                        .update(
+                                                            mapOf("status_pemesanan" to "Diambil")
+                                                        ) {
                                                             filter {
                                                                 eq("id_pemesanan", p.id_pemesanan)
                                                             }
                                                         }
 
-                                                    // 2. Insert ke jadwal_kursus
-                                                    insertJadwalKursus(
+                                                    // 2. UPDATE jadwal_kursus → isi id_instruktur
+                                                    updateJadwalInstruktur(
                                                         idPemesanan = p.id_pemesanan,
                                                         idInstruktur = idInstruktur
                                                     )
 
-                                                    // 3. Refresh list
+                                                    // 3. REFRESH LIST
                                                     fetchPemesanan()
 
                                                 } catch (e: Exception) {
