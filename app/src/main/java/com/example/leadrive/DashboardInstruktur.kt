@@ -111,7 +111,7 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
                     // Tombol Status Kursus
                     NavigationBarItem(
                         selected = false,
-                        onClick = { /*navController.navigate("statusKursus")*/ },
+                        onClick = { navController.navigate("statusKursus/$idInstruktur") },
                         icon = { Icon(Icons.Filled.List, contentDescription = "Status Kursus") },
                         label = { Text("Status") },
                         colors = NavigationBarItemDefaults.colors(

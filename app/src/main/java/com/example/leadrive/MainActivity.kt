@@ -92,6 +92,15 @@ class MainActivity : ComponentActivity() {
                                 idInstruktur = backStackEntry.arguments?.getInt("idInstruktur") ?: -1
                             )
                         }
+                        composable(
+                            "statusKursus/{idInstruktur}",
+                            arguments = listOf(navArgument("idInstruktur") { type = NavType.IntType })
+                        ) { backStackEntry ->
+                            StatusKursusScreen(
+                                navController = navController,
+                                idInstruktur = backStackEntry.arguments?.getInt("idInstruktur") ?: -1
+                            )
+                        }
                     }
                 }
             }
