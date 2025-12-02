@@ -63,6 +63,23 @@ class MainActivity : ComponentActivity() {
                         composable("setting_peserta"){
                             SettingPesertaScreen(navController = navController)
                         }
+                        composable("detail_kursus") {
+                            DetailKursusScreen(navController)
+                        }
+
+                        composable("pilih_paket"){
+                            PilihPaketScreen(navController)
+                        }
+
+                        composable("pesan_jadwal"){
+                            PesanJadwalScreen(navController)
+                        }
+
+                        composable("status_pembayaran") {
+                            StatusPembayaranScreen(navController)
+                        }
+
+
                     }
                 }
             }

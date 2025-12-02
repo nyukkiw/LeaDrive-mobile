@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 
 @kotlinx.serialization.Serializable
 data class User(
+    val id: Long,
     val email: String,
     val password: String,
     val name: String
@@ -110,14 +111,15 @@ fun LoginPeserta(navController: NavController) {
 
                         val ambilData = supabase.from("users").select().decodeList<User>()
                         val cariData = ambilData.find { it.email.equals(email, ignoreCase = true) }
-                        Log.d("dataEmailInput,","data data yang diinput: ${inputEmail},${email}")
-                        Log.d("test email","ini data yang di dapat: ${cariData?.email},${cariData?.password},${cariData?.name}")
-                        Log.d("alo","halo")
-                        if((cariData?.email == inputEmail && cariData.password == inputPassword) && cariData.name == inputNama){
+                            Log.d("dataEmailInput,","data data yang diinput: ${inputEmail},${email}")
+                            Log.d("test email","ini data yang di dapat: ${cariData?.email},${cariData?.password},${cariData?.name}")
 
-                            // SIMPAN USER DI SHARED PREFERENCES
-                            val prefs = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
-                            prefs.edit()
+                            if((cariData?.email == inputEmail && cariData.password == inputPassword) && cariData.name == inputNama){
+
+                                // SIMPAN USER DI SHARED PREFERENCES
+                                val prefs = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
+                                prefs.edit()
+                                    .putLong("user_id", cariData.id)
                                 .putString("user_email", cariData.email)
                                 .putString("user_name", cariData.name)
                                 .apply()
