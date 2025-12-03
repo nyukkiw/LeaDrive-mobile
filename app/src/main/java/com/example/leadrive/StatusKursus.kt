@@ -1,5 +1,6 @@
 package com.example.leadrive
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,6 +15,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.launch
+import io.github.jan.supabase.postgrest.query.Columns
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,28 +24,36 @@ fun StatusKursusScreen(navController: NavController, idInstruktur: Int) {
     val supabase = SupabaseClient.client
     val scope = rememberCoroutineScope()
 
-    var daftarStatus by remember { mutableStateOf<List<Pemesanan>>(emptyList()) }
+    // GANTI TIPE STATE MENJADI LIST OF JADWAL
+    var daftarJadwal by remember { mutableStateOf<List<Jadwal>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // -------------------------------------------------
-    // FETCH PEMESANAN DENGAN STATUS (Diambil / Progres)
-    // -------------------------------------------------
+    // --- FUNGSI FETCH (LOGIC SUDAH BENAR) ---
     fun fetchStatusKursus() {
         scope.launch {
             isLoading = true
             try {
-                val result = supabase.from("pemesanan")
-                    .select()
-                    .decodeList<Pemesanan>()
+                Log.d("DEBUG_UI", "Fetching data...")
+                val result = supabase.from("jadwal_kursus") // Pastikan nama tabel benar
+                    .select(Columns.list("*", "pemesanan!inner(*)")) {
+                        filter {
+                            eq("id_instruktur", idInstruktur)
+                            isIn("pemesanan.status_pemesanan", listOf("Diambil", "Progres"))
+                        }
+                    }
+                    .decodeList<Jadwal>()
 
-                val filterData = result.filter {
-                    it.status_pemesanan.equals("Diambil", ignoreCase = true) ||
-                            it.status_pemesanan.equals("Progres", ignoreCase = true)
+                Log.d("DEBUG_UI", "Data didapat: ${result.size} item")
+
+                // Cek apakah relasi pemesanan terbaca
+                result.forEach {
+                    Log.d("DEBUG_UI", "Jadwal ID: ${it.id_jadwal}, Pemesanan NULL? : ${it.pemesanan == null}")
                 }
 
-                daftarStatus = filterData
+                daftarJadwal = result
 
             } catch (e: Exception) {
+                Log.e("DEBUG_UI", "Error: ${e.message}")
                 e.printStackTrace()
             } finally {
                 isLoading = false
@@ -51,9 +61,7 @@ fun StatusKursusScreen(navController: NavController, idInstruktur: Int) {
         }
     }
 
-    // -------------------------------------------------
-    // UPDATE STATUS
-    // -------------------------------------------------
+    // --- FUNGSI UPDATE ---
     fun updateStatus(idPemesanan: Int, statusBaru: String) {
         scope.launch {
             try {
@@ -61,9 +69,7 @@ fun StatusKursusScreen(navController: NavController, idInstruktur: Int) {
                     .update(mapOf("status_pemesanan" to statusBaru)) {
                         filter { eq("id_pemesanan", idPemesanan) }
                     }
-
-                fetchStatusKursus()
-
+                fetchStatusKursus() // Refresh
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -87,73 +93,82 @@ fun StatusKursusScreen(navController: NavController, idInstruktur: Int) {
         }
     ) { inner ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(inner),
+            modifier = Modifier.fillMaxSize().padding(inner),
             contentAlignment = Alignment.Center
         ) {
-
             when {
-                isLoading -> Text("Memuat data...", fontSize = 18.sp)
+                isLoading -> Text("Memuat data...")
 
-                daftarStatus.isEmpty() ->
-                    Text("Tidak ada kursus dalam status Diambil / Progres", fontSize = 20.sp)
+                daftarJadwal.isEmpty() -> Text("Tidak ada jadwal aktif.")
 
                 else -> LazyColumn(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxSize()
+                    modifier = Modifier.fillMaxSize().padding(16.dp)
                 ) {
+                    // LOOPING DAFTAR JADWAL
+                    items(daftarJadwal) { jadwal ->
 
-                    items(daftarStatus) { p ->
+                        val p = jadwal.pemesanan
 
-                        var expanded by remember { mutableStateOf(false) }
-                        val daftarPilihan = listOf("Diambil", "Progres", "Selesai")
+                        // DEBUG VISUAL: Jika p null, tampilkan Text Merah
+                        if (p == null) {
+                            Text(
+                                "Error: Data Pemesanan Null untuk Jadwal ID ${jadwal.id_jadwal}",
+                                color = androidx.compose.ui.graphics.Color.Red
+                            )
+                        } else {
+                            // JIKA DATA ADA, TAMPILKAN CARD
+                            var expanded by remember { mutableStateOf(false) }
+                            val daftarPilihan = listOf("Diambil", "Progres", "Selesai")
 
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 6.dp)
-                        ) {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text("Jadwal ID: ${jadwal.id_jadwal}", style = MaterialTheme.typography.titleMedium)
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-                            Column(modifier = Modifier.padding(16.dp)) {
+                                    Text("ID Pemesanan: ${p.id_pemesanan}")
+                                    Text("Tanggal: ${p.tanggal_pemesanan}")
+                                    Text("Status: ${p.status_pemesanan}", style = MaterialTheme.typography.bodyLarge)
 
-                                Text("ID Pemesanan: ${p.id_pemesanan}")
-                                Text("Tanggal: ${p.tanggal_pemesanan ?: "-"}")
-                                Text("Status Saat Ini: ${p.status_pemesanan}")
+                                    Spacer(Modifier.height(16.dp))
 
-                                Spacer(Modifier.height(10.dp))
-
-                                // --------------------------
-                                // DROPDOWN PILIHAN STATUS
-                                // --------------------------
-                                ExposedDropdownMenuBox(
-                                    expanded = expanded,
-                                    onExpandedChange = { expanded = !expanded }
-                                ) {
-                                    TextField(
-                                        value = p.status_pemesanan ?: "-",
-                                        onValueChange = {},
-                                        readOnly = true,
-                                        label = { Text("Ubah Status") },
-                                        trailingIcon = {
-                                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                                        },
-                                        modifier = Modifier.menuAnchor()
-                                    )
-
-                                    ExposedDropdownMenu(
+                                    // Dropdown
+                                    ExposedDropdownMenuBox(
                                         expanded = expanded,
-                                        onDismissRequest = { expanded = false }
+                                        onExpandedChange = { expanded = !expanded }
                                     ) {
-                                        daftarPilihan.forEach { opsi ->
-                                            DropdownMenuItem(
-                                                text = { Text(opsi) },
-                                                onClick = {
-                                                    updateStatus(p.id_pemesanan, opsi)
-                                                    expanded = false
-                                                }
+                                        TextField(
+                                            value = p.status_pemesanan ?: "",
+                                            onValueChange = {},
+                                            readOnly = true,
+                                            label = { Text("Ubah Status") },
+                                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                            modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                            colors = TextFieldDefaults.colors(
+                                                unfocusedContainerColor = MaterialTheme.colorScheme.surface
                                             )
+                                        )
+
+                                        ExposedDropdownMenu(
+                                            expanded = expanded,
+                                            onDismissRequest = { expanded = false }
+                                        ) {
+                                            daftarPilihan.forEach { opsi ->
+                                                DropdownMenuItem(
+                                                    text = { Text(opsi) },
+                                                    onClick = {
+                                                        updateStatus(p.id_pemesanan, opsi)
+                                                        expanded = false
+                                                    }
+                                                )
+                                            }
                                         }
                                     }
                                 }

@@ -42,16 +42,15 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
         scope.launch {
             isLoading = true
             try {
+                // LOG DEBUG 1
+                println("DEBUG_DASHBOARD: Memulai fetch untuk ID Instruktur $idInstruktur")
+
                 val result = supabase.from("jadwal_kursus")
                     .select(
-                        Columns.list(
-                            "id_jadwal",
-                            "id_pemesanan",
-                            "tanggal",
-                            "jam_mulai",
-                            "id_instruktur",
-                            "pemesanan(status_pemesanan)"
-                        )
+                        // UBAH DISINI:
+                        // Gunakan "*" untuk ambil semua kolom jadwal
+                        // Gunakan "pemesanan(*)" untuk ambil SEMUA kolom pemesanan (agar tidak error konversi)
+                        columns = Columns.list("*", "pemesanan(*)")
                     ) {
                         filter {
                             eq("id_instruktur", idInstruktur)
@@ -59,12 +58,18 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
                     }
                     .decodeList<Jadwal>()
 
+                // LOG DEBUG 2
+                println("DEBUG_DASHBOARD: Berhasil dapat ${result.size} data")
+                result.forEach {
+                    println(" - Jadwal ID: ${it.id_jadwal}, Status: ${it.pemesanan?.status_pemesanan}")
+                }
 
                 daftarJadwal = result
 
             } catch (e: Exception) {
-                println("=== ERROR FETCH JADWAL ===")
-                e.printStackTrace()
+                // LOG ERROR PENTING
+                println("=== ERROR FETCH JADWAL DASHBOARD ===")
+                e.printStackTrace() // Cek Logcat bagian System.err
             } finally {
                 isLoading = false
             }

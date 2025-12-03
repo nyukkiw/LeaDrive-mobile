@@ -1,7 +1,7 @@
 package com.example.leadrive
 
 import kotlinx.serialization.Serializable
-
+import kotlinx.serialization.SerialName
 @Serializable
 data class Jadwal(
     val id_jadwal: Int,
@@ -9,7 +9,8 @@ data class Jadwal(
     val tanggal: String,
     val jam_mulai: String?,
     val id_instruktur: Int?,
-    val pemesanan: PemesananStatus? = null
+    @SerialName("pemesanan")
+    val pemesanan: Pemesanan? = null
 )
 
 @Serializable
