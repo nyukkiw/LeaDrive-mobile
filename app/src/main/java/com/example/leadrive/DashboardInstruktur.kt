@@ -208,51 +208,85 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
                     fontSize = 20.sp
                 )
 
-                else -> LazyColumn(modifier = Modifier.padding(16.dp)) {
+                else -> LazyColumn(
+                    modifier = Modifier.padding(16.dp),
+                    // Menambahkan spasi antar item agar lebih rapi
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     items(daftarJadwal) { j ->
+
+                        // --- KARTU JADWAL ---
                         Card(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 6.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
+                                .fillMaxWidth(),
+                            // WARNA BACKGROUND KARTU: Biru Tua (Tidak terlalu pekat)
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color(0xFF1565C0)
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
 
-                                Text("ID Jadwal: ${j.id_jadwal}")
-                                Text("ID Pemesanan: ${j.id_pemesanan}")
-                                Text("Tanggal: ${j.tanggal}")
-                                Text("Jam Mulai: ${j.jam_mulai ?: "-"}")
-                                Text("Instruktur ID: ${j.id_instruktur ?: "-"}")
-
-                                Spacer(modifier = Modifier.height(4.dp))
-
-                                val status = j.pemesanan?.status_pemesanan
-
+                                // Baris Judul: ID Jadwal (Teks Putih Tebal)
                                 Text(
-                                    "Status: ${status ?: "-"}",
-                                    color = warnaStatus(status),
-                                    fontSize = 14.sp
+                                    text = "Jadwal #${j.id_jadwal}",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color.White, // Wajib Putih
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                                 )
 
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    color = Color.White.copy(alpha = 0.3f) // Garis pemisah transparan
+                                )
+
+                                // Informasi Detail (Teks Putih agak terang)
+                                RowDetail("ID Pemesanan", j.id_pemesanan.toString())
+                                RowDetail("Tanggal", j.tanggal)
+                                RowDetail("Jam Mulai", j.jam_mulai ?: "-")
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // Status
+                                val status = j.pemesanan?.status_pemesanan
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Status: ",
+                                        color = Color.White,
+                                        fontSize = 14.sp
+                                    )
+                                    Text(
+                                        text = status ?: "-",
+                                        // Gunakan fungsi warna status yang baru (lebih terang)
+                                        color = warnaStatusDarkBg(status),
+                                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                        fontSize = 15.sp
+                                    )
+                                }
+
+                                // Tombol Buka Map (Jika status Diambil)
                                 if (status == "Diambil") {
-                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Spacer(modifier = Modifier.height(16.dp))
 
                                     Button(
                                         onClick = {
                                             navController.navigate("mapPeserta/${j.id_pemesanan}")
                                         },
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier.fillMaxWidth(),
+                                        // Ubah warna tombol agar kontras dengan Background Biru
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color.White,
+                                            contentColor = Color(0xFF1565C0) // Teks tombol jadi biru
+                                        )
                                     ) {
                                         Icon(Icons.Default.LocationOn, contentDescription = null)
                                         Spacer(Modifier.width(8.dp))
-                                        Text("Buka Map Peserta")
+                                        Text("Buka Map Peserta", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                                     }
                                 }
                             }
                         }
                     }
-
-
                 }
             }
         }
@@ -264,6 +298,36 @@ fun warnaStatus(status: String?): Color {
         "Diambil" -> Color(0xFFFFC107) // Kuning
         "Progres" -> Color(0xFFD32F2F) // Merah
         else -> Color.Black            // Default
+    }
+}
+
+@Composable
+fun RowDetail(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            color = Color.White.copy(alpha = 0.7f), // Putih agak redup untuk Label
+            fontSize = 14.sp
+        )
+        Text(
+            text = value,
+            color = Color.White, // Putih terang untuk Nilai
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+            fontSize = 14.sp
+        )
+    }
+}
+
+// Warna Status khusus untuk Background Gelap (Lebih Terang/Neon)
+fun warnaStatusDarkBg(status: String?): Color {
+    return when (status) {
+        "Diambil" -> Color(0xFFFFD54F) // Kuning Emas Terang (Kontras di Biru)
+        "Progres" -> Color(0xFFFF6E40) // Oranye Terang (Lebih mudah dibaca daripada Merah Tua)
+        "Selesai" -> Color(0xFF69F0AE) // Hijau Neon
+        else -> Color.White
     }
 }
 
