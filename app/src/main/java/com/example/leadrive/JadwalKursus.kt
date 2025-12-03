@@ -40,7 +40,7 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
                     .decodeList<Pemesanan>()
 
                 daftarPemesanan = result.filter {
-                    it.status_pemesanan.equals("pending", ignoreCase = true)
+                    it.status_pemesanan.equals("Pending", ignoreCase = true)
                 }
 
             } catch (e: Exception) {

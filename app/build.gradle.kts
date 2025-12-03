@@ -62,6 +62,10 @@ dependencies {
 
     implementation("at.favre.lib:bcrypt:0.10.2")
     implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("org.osmdroid:osmdroid-android:6.1.17")
+    implementation("com.github.MKergall:osmbonuspack:6.9.0")
+    implementation("com.google.android.gms:play-services-location:21.2.0")
+    implementation("com.google.accompanist:accompanist-permissions:0.34.0")
     implementation(libs.androidx.navigation.runtime.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

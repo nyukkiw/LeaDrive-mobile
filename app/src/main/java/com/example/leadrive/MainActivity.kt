@@ -101,6 +101,15 @@ class MainActivity : ComponentActivity() {
                                 idInstruktur = backStackEntry.arguments?.getInt("idInstruktur") ?: -1
                             )
                         }
+                        composable(
+                            route = "mapPeserta/{idPemesanan}",
+                            arguments = listOf(
+                                navArgument("idPemesanan") { type = NavType.IntType }
+                            )
+                        ) { backStackEntry ->
+                            val idPemesanan = backStackEntry.arguments?.getInt("idPemesanan")!!
+                            MapPesertaScreen(idPemesanan = idPemesanan, navController = navController)
+                        }
                     }
                 }
             }

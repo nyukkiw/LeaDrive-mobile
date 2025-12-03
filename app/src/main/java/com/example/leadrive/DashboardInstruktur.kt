@@ -228,6 +228,21 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
                                     color = warnaStatus(status),
                                     fontSize = 14.sp
                                 )
+
+                                if (status == "Diambil") {
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Button(
+                                        onClick = {
+                                            navController.navigate("mapPeserta/${j.id_pemesanan}")
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Icon(Icons.Default.LocationOn, contentDescription = null)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Buka Map Peserta")
+                                    }
+                                }
                             }
                         }
                     }
