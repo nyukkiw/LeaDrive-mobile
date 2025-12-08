@@ -1,3 +1,11 @@
+import java.util.Properties
+import java.io.FileInputStream
+
+val localProps = Properties().apply {
+    load(FileInputStream(rootProject.file("local.properties")))
+}
+
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -17,6 +25,20 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val localProps = Properties().apply {
+            load(FileInputStream(rootProject.file("local.properties")))
+        }
+
+        buildConfigField(
+            "String",
+            "MIDTRANS_SERVER_KEY",
+            "\"${localProps["MIDTRANS_SERVER_KEY"]}\""
+        )
+
+
+
+
     }
 
     buildTypes {
@@ -36,8 +58,12 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
+
+
+
 }
 
 dependencies {

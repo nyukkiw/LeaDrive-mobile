@@ -13,9 +13,14 @@ import java.net.URL
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import io.github.jan.supabase.postgrest.query.Order
+//import com.example.leadrive.BuildConfig
+
 object MidtransConfig {
-    const val SERVER_KEY = "Mid-server-4jE8HPc82aoblB-iyw9DahJY"
+    val SERVER_KEY: String = BuildConfig.MIDTRANS_SERVER_KEY
+
 }
+
+
 
 data class SnapResponse(
     val token: String,
