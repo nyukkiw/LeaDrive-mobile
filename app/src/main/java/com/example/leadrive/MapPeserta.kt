@@ -1,15 +1,30 @@
 package com.example.leadrive
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
+import com.google.android.gms.location.LocationServices
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -25,143 +40,186 @@ import org.osmdroid.views.overlay.Polyline
 @Composable
 fun MapPesertaScreen(idPemesanan: Int, navController: NavController) {
 
+    val context = LocalContext.current
     val supabase = SupabaseClient.client
 
-    var latitude by remember { mutableStateOf<Double?>(null) }
-    var longitude by remember { mutableStateOf<Double?>(null) }
+    // State untuk Lokasi Peserta (Target)
+    var targetLat by remember { mutableStateOf<Double?>(null) }
+    var targetLon by remember { mutableStateOf<Double?>(null) }
 
-    // --- BAGIAN 1: Fetch Lokasi Tujuan (Peserta) dari Supabase ---
-    LaunchedEffect(idPemesanan) {
-        try {
-            Log.d("DEBUG_MAP", "Memulai request ke Supabase untuk ID: $idPemesanan")
+    // State untuk Lokasi SAYA (Driver) - Realtime
+    var myLocation by remember { mutableStateOf<GeoPoint?>(null) }
 
-            val result = supabase.from("pemesanan")
-                .select {
-                    filter {
-                        eq("id_pemesanan", idPemesanan)
+    // Client untuk akses GPS
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+
+    // --- BAGIAN 1: Request Izin & Ambil Lokasi GPS Saya ---
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+        if (granted) {
+            // Jika izin diberikan, ambil lokasi terakhir
+            try {
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    if (location != null) {
+                        myLocation = GeoPoint(location.latitude, location.longitude)
+                        Log.d("GPS_SAYA", "Lokasi ditemukan: ${location.latitude}, ${location.longitude}")
+                    } else {
+                        Log.e("GPS_SAYA", "Lokasi null (Pastikan GPS aktif)")
                     }
                 }
-                .decodeSingleOrNull<Pemesanan>()
-
-            if (result != null) {
-                // Bersihkan format angka (koma ke titik)
-                val cleanLat = result.latitude?.replace(",", ".")
-                val cleanLon = result.longitude?.replace(",", ".")
-
-                val latDouble = cleanLat?.toDoubleOrNull()
-                val lonDouble = cleanLon?.toDoubleOrNull()
-
-                if (latDouble != null && lonDouble != null) {
-                    latitude = latDouble
-                    longitude = lonDouble
-                    Log.d("DEBUG_MAP", "Lokasi ditemukan: $latitude, $longitude")
-                }
-            } else {
-                Log.e("DEBUG_MAP", "Data kosong untuk ID: $idPemesanan")
+            } catch (e: SecurityException) {
+                e.printStackTrace()
             }
-
-        } catch (e: Exception) {
-            Log.e("DEBUG_MAP", "Error: ${e.message}", e)
         }
     }
 
-    // --- BAGIAN 2: Tampilkan Peta dengan Rute ---
-    if (latitude != null && longitude != null) {
-        // Kita panggil fungsi peta yang baru
-        OSMRoutingMapView(
-            targetLat = latitude!!,
-            targetLon = longitude!!
-        )
-    } else {
-        Text("Memuat lokasi peserta dan rute...")
+    // Jalankan Request Izin saat layar dibuka
+    LaunchedEffect(Unit) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            // Sudah punya izin, langsung ambil
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                if (location != null) {
+                    myLocation = GeoPoint(location.latitude, location.longitude)
+                }
+            }
+        } else {
+            // Belum punya izin, minta dulu
+            permissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+
+    // --- BAGIAN 2: Fetch Lokasi Peserta dari Supabase ---
+    LaunchedEffect(idPemesanan) {
+        try {
+            val result = supabase.from("pemesanan")
+                .select { filter { eq("id_pemesanan", idPemesanan) } }
+                .decodeSingleOrNull<Pemesanan>()
+
+            if (result != null) {
+                val cleanLat = result.latitude?.replace(",", ".")
+                val cleanLon = result.longitude?.replace(",", ".")
+                targetLat = cleanLat?.toDoubleOrNull()
+                targetLon = cleanLon?.toDoubleOrNull()
+            }
+        } catch (e: Exception) {
+            Log.e("DEBUG_MAP", "Error fetch supabase: ${e.message}")
+        }
+    }
+
+    // --- BAGIAN 3: Tampilkan UI ---
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+
+        // Hanya tampilkan peta jika KEDUA lokasi (Saya & Peserta) sudah didapat
+        if (targetLat != null && targetLon != null && myLocation != null) {
+            OSMRoutingMapView(
+                startPoint = myLocation!!, // Lokasi Realtime
+                endPoint = GeoPoint(targetLat!!, targetLon!!) // Lokasi Peserta
+            )
+        } else {
+            // Tampilan Loading
+            CircularProgressIndicator()
+            Text(
+                text = if (myLocation == null) "Mencari GPS Anda..." else "Mengambil data peserta...",
+                // PERBAIKAN DISINI:
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(top = 50.dp)
+            )
+        }
+        SmallFloatingActionButton(
+            onClick = { navController.popBackStack() }, // Fungsi kembali
+            modifier = Modifier
+                .align(Alignment.TopStart) // Pojok Kiri Atas
+                .padding(16.dp), // Jarak dari tepi layar
+            containerColor = androidx.compose.ui.graphics.Color.White, // Agar kontras dengan peta
+            contentColor = androidx.compose.ui.graphics.Color.Black
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Kembali"
+            )
+        }
     }
 }
 
 @Composable
-fun OSMRoutingMapView(targetLat: Double, targetLon: Double) {
+fun OSMRoutingMapView(startPoint: GeoPoint, endPoint: GeoPoint) {
     val context = LocalContext.current
-
-    // State untuk menyimpan garis rute
     var routeOverlay by remember { mutableStateOf<Polyline?>(null) }
+    var routeDistance by remember { mutableStateOf("Menghitung...") }
 
-    // --- BAGIAN 3: Tentukan Titik Awal & Akhir ---
-
-    // TODO: Ganti ini dengan lokasi GPS Asli Driver (gunakan FusedLocationProvider)
-    // Untuk tes sekarang, kita pakai koordinat dummy (misal: Alun-alun atau lokasi dekat target)
-    // Saya set koordinat yang agak dekat dengan target agar rute terlihat masuk akal
-    // (Contoh: saya geser sedikit dari targetLat/Lon)
-    val startPoint = GeoPoint(targetLat - 0.01, targetLon - 0.01)
-
-    val endPoint = GeoPoint(targetLat, targetLon)
-
-    // --- BAGIAN 4: Hitung Rute (Background Process) ---
-    LaunchedEffect(targetLat, targetLon) {
-        withContext(Dispatchers.IO) { // Wajib IO thread untuk networking
+    // --- Hitung Rute (Realtime Start ke End) ---
+    LaunchedEffect(startPoint, endPoint) {
+        withContext(Dispatchers.IO) {
             try {
                 val roadManager = OSRMRoadManager(context, "MyUserAgent/1.0")
-                // roadManager.setMean(OSRMRoadManager.MEAN_BY_CAR) // Default mobil
+                // Opsi: Gunakan MEAN_BY_CAR agar rute lewat jalan raya mobil
+                // roadManager.setMean(OSRMRoadManager.MEAN_BY_CAR)
 
                 val waypoints = arrayListOf(startPoint, endPoint)
-
-                // Minta rute ke server OSRM
                 val road = roadManager.getRoad(waypoints)
 
                 if (road.mStatus == org.osmdroid.bonuspack.routing.Road.STATUS_OK) {
-                    // Buat garis visual dari data jalan
                     val polyline = RoadManager.buildRoadOverlay(road)
-
-                    // Styling garis rute
-                    polyline.outlinePaint.color = Color.BLUE // Warna Biru
-                    polyline.outlinePaint.strokeWidth = 15f  // Ketebalan garis
+                    polyline.outlinePaint.color = Color.BLUE
+                    polyline.outlinePaint.strokeWidth = 15f
 
                     routeOverlay = polyline
-                    Log.d("DEBUG_ROUTE", "Rute berhasil dibuat. Jarak: ${road.mLength} km")
-                } else {
-                    Log.e("DEBUG_ROUTE", "Gagal load rute. Status: ${road.mStatus}")
+                    routeDistance = "${"%.2f".format(road.mLength)} km"
                 }
             } catch (e: Exception) {
-                Log.e("DEBUG_ROUTE", "Error routing: ${e.message}")
+                e.printStackTrace()
             }
         }
     }
 
-    // --- BAGIAN 5: Render Peta ---
+    // --- Render Peta ---
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { ctx ->
             Configuration.getInstance().load(ctx, ctx.getSharedPreferences("osm_prefs", 0))
-
             val map = MapView(ctx)
             map.setMultiTouchControls(true)
-            map.controller.setZoom(15.0)
-            map.controller.setCenter(endPoint) // Fokus ke tujuan
+            map.controller.setZoom(16.0)
+            map.controller.setCenter(startPoint) // Fokus awal ke driver
             map
         },
         update = { map ->
-            // Bersihkan overlay lama agar tidak menumpuk saat recompose
             map.overlays.clear()
 
-            // 1. Marker DRIVER (Awal)
+            // Marker SAYA (Driver)
             val startMarker = Marker(map)
             startMarker.position = startPoint
-            startMarker.title = "Posisi Driver"
+            startMarker.title = "Posisi Anda"
             startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-            // startMarker.icon = resources... (bisa custom icon mobil)
+            // startMarker.icon = ContextCompat.getDrawable(context, R.drawable.ic_car) // Jika punya icon mobil
             map.overlays.add(startMarker)
 
-            // 2. Marker PESERTA (Tujuan)
+            // Marker PESERTA
             val endMarker = Marker(map)
             endMarker.position = endPoint
-            endMarker.title = "Lokasi Peserta"
+            endMarker.title = "Lokasi Peserta ($routeDistance)"
             endMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
             map.overlays.add(endMarker)
 
-            // 3. Tambahkan Garis Rute (Jika sudah selesai loading)
+            // Garis Rute
             routeOverlay?.let { poly ->
                 map.overlays.add(poly)
             }
 
-            map.invalidate() // Refresh tampilan peta
+            // Agar peta otomatis zoom mencakup kedua titik (start & end)
+            // map.zoomToBoundingBox(BoundingBox.fromGeoPoints(listOf(startPoint, endPoint)), true)
+
+            map.invalidate()
         }
     )
 }
