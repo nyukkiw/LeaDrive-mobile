@@ -81,9 +81,6 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
         fetchJadwalInstruktur()
     }
 
-    //------------------------------------------------------
-    // ALERT LOGOUT
-    //------------------------------------------------------
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
@@ -290,14 +287,6 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
                 }
             }
         }
-    }
-}
-
-fun warnaStatus(status: String?): Color {
-    return when (status) {
-        "Diambil" -> Color(0xFFFFC107) // Kuning
-        "Progres" -> Color(0xFFD32F2F) // Merah
-        else -> Color.Black            // Default
     }
 }
 

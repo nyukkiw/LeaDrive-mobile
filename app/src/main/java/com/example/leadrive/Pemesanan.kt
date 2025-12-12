@@ -10,5 +10,11 @@ data class Pemesanan(
     val status_pemesanan: String,
     val id_user: Int,
     val latitude: String? = null,
-    val longitude: String? = null
+    val longitude: String? = null,
+    val users: Users? = null
+)
+
+@Serializable
+data class Users(
+    val name: String? = null
 )

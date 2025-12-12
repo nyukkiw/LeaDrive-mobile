@@ -13,7 +13,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -27,6 +26,7 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
 
     var daftarPemesanan by remember { mutableStateOf<List<Pemesanan>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+    var userNames by remember { mutableStateOf<Map<Int, String>>(emptyMap()) }
 
     // -----------------------
     // FETCH PEMESANAN PENDING

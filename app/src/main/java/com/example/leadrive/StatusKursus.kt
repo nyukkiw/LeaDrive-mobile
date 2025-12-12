@@ -1,6 +1,11 @@
 package com.example.leadrive
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,25 +15,43 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import io.github.jan.supabase.postgrest.from
-import kotlinx.coroutines.launch
 import io.github.jan.supabase.postgrest.query.Columns
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatusKursusScreen(navController: NavController, idInstruktur: Int) {
 
+    val context = LocalContext.current
     val supabase = SupabaseClient.client
     val scope = rememberCoroutineScope()
 
-    // GANTI TIPE STATE MENJADI LIST OF JADWAL
     var daftarJadwal by remember { mutableStateOf<List<Jadwal>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // --- FUNGSI FETCH (LOGIC SUDAH BENAR) ---
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            Log.d("NOTIF_PERM", "Izin notifikasi diberikan: $isGranted")
+        }
+    )
+
+    LaunchedEffect(Unit) {
+        // 1. Buat Channel Notifikasi (Wajib)
+        NotificationHelper.createNotificationChannel(context)
+
+        // 2. Minta Izin jika Android 13 (Tiramisu) ke atas
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
     fun fetchStatusKursus() {
         scope.launch {
             isLoading = true
@@ -45,7 +68,6 @@ fun StatusKursusScreen(navController: NavController, idInstruktur: Int) {
 
                 Log.d("DEBUG_UI", "Data didapat: ${result.size} item")
 
-                // Cek apakah relasi pemesanan terbaca
                 result.forEach {
                     Log.d("DEBUG_UI", "Jadwal ID: ${it.id_jadwal}, Pemesanan NULL? : ${it.pemesanan == null}")
                 }
@@ -65,13 +87,29 @@ fun StatusKursusScreen(navController: NavController, idInstruktur: Int) {
     fun updateStatus(idPemesanan: Int, statusBaru: String) {
         scope.launch {
             try {
+                // 1. Update ke Supabase
                 supabase.from("pemesanan")
                     .update(mapOf("status_pemesanan" to statusBaru)) {
                         filter { eq("id_pemesanan", idPemesanan) }
                     }
-                fetchStatusKursus() // Refresh
+
+                // 2. CEK JIKA STATUS SELESAI -> MUNCULKAN NOTIFIKASI
+                if (statusBaru == "Selesai") {
+                    NotificationHelper.showNotification(
+                        context = context,
+                        title = "Kursus Selesai!",
+                        message = "Kursus ID $idPemesanan telah ditandai selesai."
+                    )
+                }
+
+                // 3. Refresh Data
+                // Catatan: Karena filter fetch hanya mengambil "Diambil" & "Progres",
+                // maka item yang diubah jadi "Selesai" akan hilang dari list (Ini normal).
+                fetchStatusKursus()
+
             } catch (e: Exception) {
                 e.printStackTrace()
+                // Opsional: Tampilkan Toast error di sini
             }
         }
     }

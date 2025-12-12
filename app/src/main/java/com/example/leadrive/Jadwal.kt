@@ -13,7 +13,4 @@ data class Jadwal(
     val pemesanan: Pemesanan? = null
 )
 
-@Serializable
-data class PemesananStatus(
-    val status_pemesanan: String?
-)
+
