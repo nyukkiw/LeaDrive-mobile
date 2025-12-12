@@ -134,8 +134,6 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
 
                                     Text("ID Pemesanan: ${p.id_pemesanan}")
                                     Text("Tanggal: ${p.tanggal_pemesanan ?: "-"}")
-
-                                    // Status
                                     Text("Status: ${p.status_pemesanan}")
 
                                     Spacer(Modifier.height(10.dp))

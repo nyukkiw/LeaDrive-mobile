@@ -50,7 +50,7 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
                         // UBAH DISINI:
                         // Gunakan "*" untuk ambil semua kolom jadwal
                         // Gunakan "pemesanan(*)" untuk ambil SEMUA kolom pemesanan (agar tidak error konversi)
-                        columns = Columns.list("*", "pemesanan(*)")
+                        columns = Columns.list("*", "pemesanan(*, users(*))")
                     ) {
                         filter {
                             eq("id_instruktur", idInstruktur)
@@ -211,6 +211,7 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(daftarJadwal) { j ->
+                        val namaPeserta = j.pemesanan?.users?.name ?: "Tidak diketahui"
 
                         // --- KARTU JADWAL ---
                         Card(
@@ -238,6 +239,7 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
                                 )
 
                                 // Informasi Detail (Teks Putih agak terang)
+                                RowDetail("Peserta", namaPeserta)
                                 RowDetail("ID Pemesanan", j.id_pemesanan.toString())
                                 RowDetail("Tanggal", j.tanggal)
                                 RowDetail("Jam Mulai", j.jam_mulai ?: "-")
