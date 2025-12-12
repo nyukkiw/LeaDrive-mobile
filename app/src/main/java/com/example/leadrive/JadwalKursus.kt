@@ -9,13 +9,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,7 +26,6 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
 
     var daftarPemesanan by remember { mutableStateOf<List<Pemesanan>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
-    var userNames by remember { mutableStateOf<Map<Int, String>>(emptyMap()) }
 
     // -----------------------
     // FETCH PEMESANAN PENDING
@@ -35,8 +34,13 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
         scope.launch {
             isLoading = true
             try {
+                // MODIFIKASI QUERY DISINI
                 val result = supabase.from("pemesanan")
-                    .select()
+                    .select(
+                        // Kita mengambil semua kolom pemesanan (*)
+                        // DAN kolom username dari tabel users yang berelasi
+                        columns = Columns.list("*", "users(name)")
+                    )
                     .decodeList<Pemesanan>()
 
                 daftarPemesanan = result.filter {
@@ -66,9 +70,7 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
                             eq("id_pemesanan", idPemesanan)
                         }
                     }
-
                 println("=== UPDATE JADWAL KURSUS BERHASIL ===")
-
             } catch (e: Exception) {
                 println("=== ERROR UPDATE JADWAL KURSUS ===")
                 e.printStackTrace()
@@ -80,7 +82,6 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
     LaunchedEffect(Unit) {
         fetchPemesanan()
     }
-
 
     Scaffold(
         topBar = {
@@ -118,15 +119,27 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 6.dp)
+                                    .padding(vertical = 6.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
+
+                                    // TAMPILKAN USERNAME
+                                    Text(
+                                        text = "Nama Peserta : ${p.users?.name ?: "Tidak diketahui"}",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
                                     Text("ID Pemesanan: ${p.id_pemesanan}")
-                                    Text("ID Paket: ${p.id_paket}")
                                     Text("Tanggal: ${p.tanggal_pemesanan ?: "-"}")
-                                    Text("ID User: ${p.id_user}")
+
+                                    // Status
                                     Text("Status: ${p.status_pemesanan}")
+
                                     Spacer(Modifier.height(10.dp))
+
                                     Button(
                                         onClick = {
                                             scope.launch {
@@ -151,7 +164,8 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
                                                     e.printStackTrace()
                                                 }
                                             }
-                                        }
+                                        },
+                                        modifier = Modifier.align(Alignment.End)
                                     )
                                     {
                                         Text("Ambil")

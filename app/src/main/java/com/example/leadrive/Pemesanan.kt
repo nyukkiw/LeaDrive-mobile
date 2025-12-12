@@ -1,7 +1,7 @@
 package com.example.leadrive
 
 import kotlinx.serialization.Serializable
-
+import kotlinx.serialization.SerialName
 @Serializable
 data class Pemesanan(
     val id_pemesanan: Int,
@@ -11,6 +11,7 @@ data class Pemesanan(
     val id_user: Int,
     val latitude: String? = null,
     val longitude: String? = null,
+    @SerialName("users")
     val users: Users? = null
 )
 
