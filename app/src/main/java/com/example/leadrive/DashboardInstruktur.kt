@@ -1,11 +1,14 @@
 package com.example.leadrive
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -34,6 +38,29 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
 
     var daftarJadwal by remember { mutableStateOf<List<Jadwal>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+    var pendingCount by remember { mutableIntStateOf(0) }
+
+    fun fetchPendingCount() {
+        scope.launch {
+            try {
+                // Kita ambil semua data pemesanan yang statusnya Pending
+                // Catatan: Jika data sangat banyak, gunakan .count() / head=true lebih efisien.
+                // Tapi cara ini paling aman agar tidak error import.
+                val result = supabase.from("pemesanan")
+                    .select {
+                        filter {
+                            eq("status_pemesanan", "pending")
+                        }
+                    }
+                    .decodeList<Pemesanan>()
+
+                pendingCount = result.size
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     //------------------------------------------------------
     // FETCH DATA JADWAL UNTUK INSTRUKTUR
@@ -79,6 +106,7 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
     // Load saat masuk halaman
     LaunchedEffect(idInstruktur) {
         fetchJadwalInstruktur()
+        fetchPendingCount()
     }
 
     if (showDialog) {
@@ -113,51 +141,88 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
     //------------------------------------------------------
     Scaffold(
         topBar = {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            // Gunakan Column agar bisa menumpuk Profil dan Notifikasi
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(16.dp)
             ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                // --- KARTU PROFIL ---
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
-                    Image(
-                        painter = rememberAsyncImagePainter(
-                            model = photoUrl,
-                            error = painterResource(id = R.drawable.ic_launcher_background),
-                            placeholder = painterResource(id = R.drawable.ic_launcher_foreground)
-                        ),
-                        contentDescription = "Foto Profil",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(CircleShape)
-                    )
-
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(nama, fontSize = 20.sp, style = MaterialTheme.typography.titleLarge)
-                        Text("Instruktur", fontSize = 14.sp)
+                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = rememberAsyncImagePainter(
+                                model = photoUrl,
+                                error = painterResource(id = R.drawable.ic_launcher_background),
+                                placeholder = painterResource(id = R.drawable.ic_launcher_foreground)
+                            ),
+                            contentDescription = "Foto Profil",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.size(64.dp).clip(CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(nama, fontSize = 20.sp, style = MaterialTheme.typography.titleLarge)
+                            Text("Instruktur", fontSize = 14.sp)
+                        }
+                        IconButton(onClick = { showDialog = true }) {
+                            Icon(Icons.Filled.ExitToApp, contentDescription = "Logout")
+                        }
                     }
+                }
 
-                    IconButton(onClick = { showDialog = true }) {
-                        Icon(Icons.Filled.ExitToApp, contentDescription = "Logout")
+                // --- KARTU NOTIFIKASI KECIL (Hanya muncul jika ada pending) ---
+                if (pendingCount > 0) {
+                    Spacer(modifier = Modifier.height(8.dp)) // Jarak dari profil
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                // Saat diklik, langsung arahkan ke halaman Jadwal Kursus
+                                navController.navigate("jadwalKursus/$idInstruktur")
+                            },
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFFFFF9C4) // Warna Kuning Muda (Alert)
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.NotificationsActive,
+                                contentDescription = null,
+                                tint = Color(0xFFF57C00), // Ikon Oranye
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Text(
+                                text = "Notifikasi : Ada $pendingCount jadwal yang belum diambil",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.Black,
+                                modifier = Modifier.weight(1f),
+                                fontWeight = FontWeight.Medium
+                            )
+
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = null,
+                                tint = Color.Gray,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                 }
             }
         },
-
         bottomBar = {
             BottomAppBar(containerColor = Color(0xFFFF9800)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceAround,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
                     NavigationBarItem(
                         selected = false,
                         onClick = { navController.navigate("jadwalKursus/$idInstruktur") },
@@ -166,7 +231,6 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
                         colors = NavigationBarItemDefaults.colors(
                             unselectedIconColor = Color.White,
                             selectedIconColor = Color.White,
-                            selectedTextColor = Color.White,
                             indicatorColor = Color(0xFFFF9800)
                         )
                     )
@@ -186,11 +250,7 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
         }
     ) { innerPadding ->
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
 
             when {
                 isLoading -> Text(
@@ -200,87 +260,68 @@ fun DashboardInstruktur(idInstruktur: Int, nama: String, photoUrl: String?, navC
                 )
 
                 daftarJadwal.isEmpty() -> Text(
-                    "Belum ada kursus yang diambil",
+                    "Belum ada kursus diambil",
                     modifier = Modifier.align(Alignment.Center),
                     fontSize = 20.sp
                 )
 
                 else -> LazyColumn(
                     modifier = Modifier.padding(16.dp),
-                    // Menambahkan spasi antar item agar lebih rapi
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(daftarJadwal) { j ->
+
+                        // Safe call deep join username
                         val namaPeserta = j.pemesanan?.users?.name ?: "Tidak diketahui"
 
-                        // --- KARTU JADWAL ---
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            // WARNA BACKGROUND KARTU: Biru Tua (Tidak terlalu pekat)
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFF1565C0)
-                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1565C0)),
                             elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
 
-                                // Baris Judul: ID Jadwal (Teks Putih Tebal)
                                 Text(
-                                    text = "Jadwal #${j.id_jadwal}",
+                                    text = "Nama  ${namaPeserta}",
                                     style = MaterialTheme.typography.titleMedium,
-                                    color = Color.White, // Wajib Putih
-                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
                                 )
 
                                 HorizontalDivider(
                                     modifier = Modifier.padding(vertical = 8.dp),
-                                    color = Color.White.copy(alpha = 0.3f) // Garis pemisah transparan
+                                    color = Color.White.copy(alpha = 0.3f)
                                 )
-
-                                // Informasi Detail (Teks Putih agak terang)
-                                RowDetail("Peserta", namaPeserta)
                                 RowDetail("ID Pemesanan", j.id_pemesanan.toString())
                                 RowDetail("Tanggal", j.tanggal)
                                 RowDetail("Jam Mulai", j.jam_mulai ?: "-")
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                // Status
                                 val status = j.pemesanan?.status_pemesanan
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = "Status: ",
-                                        color = Color.White,
-                                        fontSize = 14.sp
-                                    )
+                                    Text("Status: ", color = Color.White, fontSize = 14.sp)
                                     Text(
                                         text = status ?: "-",
-                                        // Gunakan fungsi warna status yang baru (lebih terang)
                                         color = warnaStatusDarkBg(status),
-                                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                        fontWeight = FontWeight.Bold,
                                         fontSize = 15.sp
                                     )
                                 }
 
-                                // Tombol Buka Map (Jika status Diambil)
                                 if (status == "Diambil") {
                                     Spacer(modifier = Modifier.height(16.dp))
-
                                     Button(
-                                        onClick = {
-                                            navController.navigate("mapPeserta/${j.id_pemesanan}")
-                                        },
+                                        onClick = { navController.navigate("mapPeserta/${j.id_pemesanan}") },
                                         modifier = Modifier.fillMaxWidth(),
-                                        // Ubah warna tombol agar kontras dengan Background Biru
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = Color.White,
-                                            contentColor = Color(0xFF1565C0) // Teks tombol jadi biru
+                                            contentColor = Color(0xFF1565C0)
                                         )
                                     ) {
                                         Icon(Icons.Default.LocationOn, contentDescription = null)
                                         Spacer(Modifier.width(8.dp))
-                                        Text("Buka Map Peserta", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                                        Text("Buka Map Peserta", fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
