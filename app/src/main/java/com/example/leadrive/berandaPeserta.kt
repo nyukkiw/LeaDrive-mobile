@@ -126,6 +126,9 @@ fun BerandaPeserta(navControllerUtama: NavController) { // NavController from Ma
             composable("beranda_content") { BerandaContent(navControllerBawah) }
             composable("list_kursus") { ListKursusScreen(navControllerUtama) }
             composable("detail_kursus") { DetailKursusScreen(navControllerUtama) }
+            composable("lihat_jadwal"){LihatJadwalKursusScreen(navControllerUtama)}
+            composable("riwayat_kursus") { RiwayatKursusScreen(navControllerUtama) }
+
         }
     }
 }
@@ -162,8 +165,8 @@ fun BerandaContent(navController: NavController) {
                     // cukup navigasi ke screen list; logic lokasi & fetch dipindah ke ListKursusScreen
                     navController.navigate("list_kursus")
                 },
-            onScheduleClick = { /* ... */ },
-            onHistoryClick = { /* ... */ },
+            onScheduleClick = {navController.navigate("lihat_jadwal")},
+            onHistoryClick = { navController.navigate("riwayat_kursus") },
             onProfileClick = { /* ... */ }
         )
 
