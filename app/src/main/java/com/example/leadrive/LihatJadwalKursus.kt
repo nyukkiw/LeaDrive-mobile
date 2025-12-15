@@ -58,6 +58,7 @@ data class KursusNested(
 suspend fun fetchJadwalKursusPeserta(
     userId: Long
 ): List<JadwalKursusResponse> {
+
     val supabase = SupabaseClient.client
 
     return supabase
@@ -65,26 +66,28 @@ suspend fun fetchJadwalKursusPeserta(
         .select(
             columns = Columns.raw(
                 """
-        tanggal,
-        jam_mulai,
-        pemesanan!inner (
-            status_pemesanan,
-            paket_kursus!inner (
-                kursus!inner (
-                    nama_kursus
+                tanggal,
+                jam_mulai,
+                pemesanan!inner (
+                    status_pemesanan,
+                    id_user,
+                    paket_kursus!inner (
+                        kursus!inner (
+                            nama_kursus
+                        )
+                    )
                 )
-            )
-        )
-        """
+                """
             )
         ) {
             filter {
                 eq("pemesanan.id_user", userId)
+//                neq("pemesanan.status_pemesanan", "selesai")
             }
+
             order("tanggal", Order.ASCENDING)
             order("jam_mulai", Order.ASCENDING)
         }
-
         .decodeList()
 }
 
@@ -103,17 +106,37 @@ fun LihatJadwalKursusScreen(navController: NavController) {
     var loading by remember { mutableStateOf(true) }
     var jadwalList by remember { mutableStateOf<List<JadwalKursusResponse>>(emptyList()) }
 
+//    LaunchedEffect(userId) {
+//        if (userId == -1L) {
+//            Log.e("LihatJadwal", "User belum login")
+//            Log.d("DEBUG_JADWAL", jadwalList.toString())
+//
+//            loading = false
+//            return@LaunchedEffect
+//        }
+//
+//        loading = true
+//        jadwalList = fetchJadwalKursusPeserta(userId)
+//        loading = false
+//    }
     LaunchedEffect(userId) {
         if (userId == -1L) {
-            Log.e("LihatJadwal", "User belum login")
-            Log.d("DEBUG_JADWAL", jadwalList.toString())
-
             loading = false
             return@LaunchedEffect
         }
 
         loading = true
-        jadwalList = fetchJadwalKursusPeserta(userId)
+
+        val data = fetchJadwalKursusPeserta(userId)
+
+        // 🔥 FILTER FINAL & AMAN
+        jadwalList = data.filter {
+            it.pemesanan
+                ?.status_pemesanan
+                ?.lowercase()
+                ?.trim() != "selesai"
+        }
+
         loading = false
     }
 

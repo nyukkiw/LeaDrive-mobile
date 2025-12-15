@@ -17,6 +17,8 @@ import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.serialization.Serializable
 import android.content.Context
+import androidx.compose.foundation.clickable
+
 // =======================
 // DATA CLASS (JOIN RESULT)
 // =======================
@@ -36,13 +38,18 @@ data class PemesananRiwayat(
 
 @Serializable
 data class PaketKursusRiwayat(
+    val id_kursus: Long,
     val kursus: KursusRiwayat
 )
+
+
 
 @Serializable
 data class KursusRiwayat(
     val nama_kursus: String
 )
+
+
 
 // =======================
 // SUPABASE QUERY
@@ -63,6 +70,7 @@ suspend fun fetchRiwayatKursus(
                 pemesanan!inner (
                     status_pemesanan,
                     paket_kursus!inner (
+                    id_kursus,
                         kursus!inner (
                             nama_kursus
                         )
@@ -132,8 +140,12 @@ fun RiwayatKursusScreen(navController: NavController) {
             else -> {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(riwayatList) { item ->
-                        RiwayatKursusCard(item)
+                        RiwayatKursusCard(
+                            item = item,
+                            navController = navController
+                        )
                     }
+
                 }
             }
         }
@@ -145,34 +157,37 @@ fun RiwayatKursusScreen(navController: NavController) {
 // =======================
 
 @Composable
-fun RiwayatKursusCard(item: RiwayatKursusResponse) {
+fun RiwayatKursusCard(
+    item: RiwayatKursusResponse,
+    navController: NavController
+) {
     Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                navController.navigate(
+                    "rating_kursus/${item.pemesanan.paket_kursus.id_kursus}/${item.pemesanan.paket_kursus.kursus.nama_kursus}"
+                )
+            },
         shape = RoundedCornerShape(20.dp),
-        tonalElevation = 3.dp,
-        modifier = Modifier.fillMaxWidth()
+        tonalElevation = 3.dp
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
-
             Text(
                 text = item.pemesanan.paket_kursus.kursus.nama_kursus,
                 style = MaterialTheme.typography.titleMedium
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
-
             Text(
                 text = "${item.tanggal} • ${item.jam_mulai}",
-                style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
             Text(
                 text = "SELESAI",
-                style = MaterialTheme.typography.labelMedium,
                 color = Color(0xFF4CAF50)
             )
         }
     }
 }
+

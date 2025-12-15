@@ -19,6 +19,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 
 // Navigation
 import androidx.navigation.NavController
@@ -128,6 +130,9 @@ fun BerandaPeserta(navControllerUtama: NavController) { // NavController from Ma
             composable("detail_kursus") { DetailKursusScreen(navControllerUtama) }
             composable("lihat_jadwal"){LihatJadwalKursusScreen(navControllerUtama)}
             composable("riwayat_kursus") { RiwayatKursusScreen(navControllerUtama) }
+
+
+
 
         }
     }

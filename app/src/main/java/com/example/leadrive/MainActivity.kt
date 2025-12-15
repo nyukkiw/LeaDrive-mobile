@@ -30,6 +30,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.Image // <-- TAMBAHKAN IMPORT INI
 import androidx.compose.ui.res.painterResource // <-- TAMBAHKAN IMPORT INI
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 
 class MainActivity : ComponentActivity() {
 
@@ -77,6 +79,23 @@ class MainActivity : ComponentActivity() {
 
                         composable("status_pembayaran") {
                             StatusPembayaranScreen(navController)
+                        }
+
+                        composable(
+                            route = "rating_kursus/{idKursus}/{namaKursus}",
+                            arguments = listOf(
+                                navArgument("idKursus") { type = NavType.LongType },
+                                navArgument("namaKursus") { type = NavType.StringType }
+                            )
+                        ) { backStackEntry ->
+                            val idKursus = backStackEntry.arguments!!.getLong("idKursus")
+                            val namaKursus = backStackEntry.arguments!!.getString("namaKursus")!!
+
+                            RatingKursusScreen(
+                                navController = navController,
+                                idKursus = idKursus,
+                                namaKursus = namaKursus
+                            )
                         }
 
 
