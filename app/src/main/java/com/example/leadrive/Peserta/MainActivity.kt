@@ -1,10 +1,8 @@
-package com.example.leadrive
-import com.example.leadrive.daftar
+package com.example.leadrive.Peserta
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -19,10 +17,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -32,6 +28,7 @@ import androidx.compose.foundation.Image // <-- TAMBAHKAN IMPORT INI
 import androidx.compose.ui.res.painterResource // <-- TAMBAHKAN IMPORT INI
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.leadrive.R
 
 class MainActivity : ComponentActivity() {
 

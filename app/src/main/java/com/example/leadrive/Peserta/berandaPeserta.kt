@@ -1,4 +1,4 @@
-package com.example.leadrive
+package com.example.leadrive.Peserta
 
 // Compose + UI
 import androidx.compose.foundation.background
@@ -19,55 +19,25 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
 
 // Navigation
 import androidx.navigation.NavController
 import androidx.navigation.compose.*
 
 // Coroutines
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import androidx.compose.runtime.rememberCoroutineScope
 
 // Android platform APIs
-import android.Manifest
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.location.Location
 import android.net.Uri
 import android.provider.Settings
-import android.util.Log
-import android.widget.Toast
 
 // Activity result / permission helpers
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 
 // Play services location
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
 
 // Math
-import kotlin.math.*
-
-
-
-
-
-
-
-
-
-
-
 
 
 // helper: open app settings (when permission permanently denied)
@@ -128,7 +98,7 @@ fun BerandaPeserta(navControllerUtama: NavController) { // NavController from Ma
             composable("beranda_content") { BerandaContent(navControllerBawah) }
             composable("list_kursus") { ListKursusScreen(navControllerUtama) }
             composable("detail_kursus") { DetailKursusScreen(navControllerUtama) }
-            composable("lihat_jadwal"){LihatJadwalKursusScreen(navControllerUtama)}
+            composable("lihat_jadwal"){ LihatJadwalKursusScreen(navControllerUtama) }
             composable("riwayat_kursus") { RiwayatKursusScreen(navControllerUtama) }
 
 

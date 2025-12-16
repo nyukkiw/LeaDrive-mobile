@@ -1,18 +1,6 @@
-package com.example.leadrive
+package com.example.leadrive.Peserta
 
 
-
-import io.github.jan.supabase.postgrest.postgrest
-
-import io.github.jan.supabase.postgrest.from
-
-import io.github.jan.supabase.postgrest.query.PostgrestQueryBuilder
-
-import io.github.jan.supabase.postgrest.from
-
-
-
-import io.github.jan.supabase.postgrest.query.Columns
 
 import kotlinx.coroutines.Dispatchers
 
@@ -39,8 +27,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
 import androidx.navigation.NavController
-
-import kotlinx.coroutines.launch
 
 import android.widget.Toast
 
@@ -81,17 +67,12 @@ import kotlin.math.*
 import android.content.Intent
 
 import android.net.Uri
+import com.example.leadrive.SupabaseClient
 
 
-
-
-
-
-
-
-
-import kotlinx.serialization.Serializable
-
+import org.json.JSONArray
+import java.net.HttpURLConnection
+import java.net.URL
 
 
 // --- DATA CLASS ---
@@ -240,15 +221,15 @@ fun haversineKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double 
 
     val dLon = Math.toRadians(lon2 - lon1)
 
-    val a = kotlin.math.sin(dLat / 2) * kotlin.math.sin(dLat / 2) +
+    val a = sin(dLat / 2) * sin(dLat / 2) +
 
-            kotlin.math.cos(Math.toRadians(lat1)) *
+            cos(Math.toRadians(lat1)) *
 
-            kotlin.math.cos(Math.toRadians(lat2)) *
+            cos(Math.toRadians(lat2)) *
 
-            kotlin.math.sin(dLon / 2) * kotlin.math.sin(dLon / 2)
+            sin(dLon / 2) * sin(dLon / 2)
 
-    val c = 2 * kotlin.math.atan2(kotlin.math.sqrt(a), kotlin.math.sqrt(1 - a))
+    val c = 2 * atan2(sqrt(a), sqrt(1 - a))
 
     return R * c
 
@@ -310,7 +291,7 @@ suspend fun fetchKursusFromServer(): List<Kursus> {
 
 
 
-            val conn = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+            val conn = URL(url).openConnection() as HttpURLConnection
 
             conn.requestMethod = "GET"
 
@@ -338,7 +319,7 @@ suspend fun fetchKursusFromServer(): List<Kursus> {
 
             }
 
-            android.util.Log.d("FetchKursus", "HTTP $code -> ${body.take(2000)}")
+            Log.d("FetchKursus", "HTTP $code -> ${body.take(2000)}")
 
             conn.disconnect()
 
@@ -348,7 +329,7 @@ suspend fun fetchKursusFromServer(): List<Kursus> {
 
 
 
-            val jsonArray = org.json.JSONArray(body)
+            val jsonArray = JSONArray(body)
 
             val result = mutableListOf<Kursus>()
 
@@ -408,7 +389,7 @@ suspend fun fetchKursusFromServer(): List<Kursus> {
 
     } catch (e: Exception) {
 
-        android.util.Log.e("FetchKursus", "exception: ${e.message}", e)
+        Log.e("FetchKursus", "exception: ${e.message}", e)
 
         emptyList()
 
@@ -480,7 +461,7 @@ fun ListKursusScreen(navController: NavController) {
 
             val fetched = fetchKursusFromServer()
 
-            android.util.Log.d("ListKursus", "fetched ${fetched.size} kursus")
+            Log.d("ListKursus", "fetched ${fetched.size} kursus")
 
 
 
@@ -536,7 +517,7 @@ fun ListKursusScreen(navController: NavController) {
 
 
 
-            android.util.Log.d("ListKursus", "first distances: ${mapped.take(5).map { Pair(it.kursus.name, it.distanceKm) }}")
+            Log.d("ListKursus", "first distances: ${mapped.take(5).map { Pair(it.kursus.name, it.distanceKm) }}")
 
 
 
@@ -552,7 +533,7 @@ fun ListKursusScreen(navController: NavController) {
 
         } catch (e: Exception) {
 
-            android.util.Log.e("ListKursus", "exception in LaunchedEffect: ${e.message}", e)
+            Log.e("ListKursus", "exception in LaunchedEffect: ${e.message}", e)
 
             Toast.makeText(context, "Error mengambil kursus", Toast.LENGTH_SHORT).show()
 

@@ -1,4 +1,4 @@
-package com.example.leadrive
+package com.example.leadrive.Peserta
 
 import android.content.Context
 import android.content.Intent
@@ -9,19 +9,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.postgrest
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
-import java.time.LocalDate   // ⬅️ PAKAI java.time, bukan kotlinx.datetime
-
 
 
 /**
@@ -167,14 +159,14 @@ fun StatusPembayaranScreen(navController: NavController) {
                     }
                 }
             }
-            kotlinx.coroutines.delay(5000)
+            delay(5000)
         }
     }
 
     // 2. Countdown lokal
     LaunchedEffect(Unit) {
         while (remainingSeconds > 0) {
-            kotlinx.coroutines.delay(1000)
+            delay(1000)
             remainingSeconds--
         }
         if (status == "belum bayar") {

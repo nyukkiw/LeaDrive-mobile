@@ -22,7 +22,7 @@
             android:value="AIzaSyD21ITcc1S5hoaAbNH9VA3zMeZ0HybL1V0" />
 
         <activity
-            android:name=".MainActivity"
+            android:name=".Peserta.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.LeaDrive">

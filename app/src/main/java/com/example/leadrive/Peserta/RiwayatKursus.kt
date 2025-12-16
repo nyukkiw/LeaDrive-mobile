@@ -1,4 +1,4 @@
-package com.example.leadrive
+package com.example.leadrive.Peserta
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,6 +18,7 @@ import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.serialization.Serializable
 import android.content.Context
 import androidx.compose.foundation.clickable
+import com.example.leadrive.SupabaseClient
 
 // =======================
 // DATA CLASS (JOIN RESULT)

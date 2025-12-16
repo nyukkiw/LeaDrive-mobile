@@ -1,4 +1,4 @@
-package com.example.leadrive
+package com.example.leadrive.Peserta
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,16 +12,14 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 //import io.github.jan.supabase.postgrest.from
 //import io.github.jan.supabase.postgrest.query.Order
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
 //import io.github.jan.supabase.postgrest.filter.eq
-import android.util.Log
 import androidx.compose.ui.platform.LocalContext
 import android.content.Context
+import com.example.leadrive.SupabaseClient
 
 // =======================
 // DATA CLASS (HASIL JOIN)

@@ -1,4 +1,4 @@
-package com.example.leadrive
+package com.example.leadrive.Peserta
 
 import android.content.Context
 import androidx.compose.foundation.layout.*
@@ -6,7 +6,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -18,7 +17,7 @@ import java.time.LocalDate
 import kotlinx.coroutines.launch
 import android.widget.Toast
 import android.util.Log
-import androidx.compose.ui.platform.LocalContext
+import com.example.leadrive.SupabaseClient
 
 @Serializable
 data class RatingInsert(

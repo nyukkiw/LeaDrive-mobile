@@ -1,12 +1,10 @@
-package com.example.leadrive
+package com.example.leadrive.Peserta
 
 
 import android.util.Log
 //import io.github.jan.supabase.postgrest.query.postgrestFilter
 
-import io.github.jan.supabase.postgrest.query.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
@@ -15,16 +13,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.postgrest
 import android.widget.Toast
 import android.content.Context
 import androidx.compose.ui.platform.LocalContext
+import com.example.leadrive.SupabaseClient
+import kotlinx.serialization.Serializable
 
-@kotlinx.serialization.Serializable
+@Serializable
 data class User(
     val id: Long,
     val email: String,

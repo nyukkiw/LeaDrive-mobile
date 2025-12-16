@@ -1,9 +1,10 @@
-package com.example.leadrive
+package com.example.leadrive.Peserta
 
 import android.util.Base64
 import android.util.Log
+import com.example.leadrive.BuildConfig
+import com.example.leadrive.SupabaseClient
 import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -12,7 +13,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import io.github.jan.supabase.postgrest.query.Order
+
 //import com.example.leadrive.BuildConfig
 
 object MidtransConfig {
@@ -227,7 +228,7 @@ data class PemesananRow(
 //    val id_pemesanan: Long
 //)
 
-@kotlinx.serialization.Serializable
+@Serializable
 data class PemesananInsert(
     val id_paket: Long,
     val tanggal_pemesanan: String,
@@ -237,7 +238,7 @@ data class PemesananInsert(
     val longitude: String? = null
 )
 
-@kotlinx.serialization.Serializable
+@Serializable
 data class JadwalKursusInsert(
     val id_pemesanan: Long,
     val tanggal: String,
@@ -245,7 +246,7 @@ data class JadwalKursusInsert(
     val id_instruktur: Long? = null
 )
 
-@kotlinx.serialization.Serializable
+@Serializable
 data class PembayaranUpdateBody(
     val id_pemesanan: Long,
     val tanggal_jam_pembayaran: String

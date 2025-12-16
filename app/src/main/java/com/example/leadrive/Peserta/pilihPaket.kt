@@ -1,5 +1,6 @@
-package com.example.leadrive
+package com.example.leadrive.Peserta
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,6 +20,8 @@ import java.net.URL
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.foundation.clickable
+import com.example.leadrive.SupabaseClient
+
 // ====== DATA CLASS UNTUK UI ======
 data class PaketKursusUi(
     val idPaket: Long,
@@ -94,7 +97,7 @@ suspend fun fetchPaketForKursus(kursusId: String): List<PaketKursusUi> {
             list.sortedBy { it.harga }
         }
     } catch (e: Exception) {
-        android.util.Log.e("FetchPaket", "Error fetchPaketForKursus: ${e.message}", e)
+        Log.e("FetchPaket", "Error fetchPaketForKursus: ${e.message}", e)
         emptyList()
     }
 }
