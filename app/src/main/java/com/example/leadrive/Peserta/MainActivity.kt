@@ -3,6 +3,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -17,18 +18,25 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.compose.foundation.Image // <-- TAMBAHKAN IMPORT INI
 import androidx.compose.ui.res.painterResource // <-- TAMBAHKAN IMPORT INI
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
+import com.example.leadrive.DashboardInstruktur
+import com.example.leadrive.JadwalKursusScreen
+import com.example.leadrive.MapPesertaScreen
 import com.example.leadrive.R
+import com.example.leadrive.StatusKursusScreen
+import com.example.leadrive.LoginInstruktur
 
 class MainActivity : ComponentActivity() {
 
@@ -50,7 +58,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable("login") { LoginScreen(navController) }
                         composable("loginPeserta") { LoginPeserta(navController=navController) }
-
+                        composable("loginInstruktur") { LoginInstruktur(navController = navController) }
                         composable("Daftar") {
                             daftar(navController = navController)
                         }
@@ -94,8 +102,51 @@ class MainActivity : ComponentActivity() {
                                 namaKursus = namaKursus
                             )
                         }
-
-
+                        composable(
+                            "dashboardInstruktur/{idInstruktur}/{nama}?photoUrl={photoUrl}",
+                            arguments = listOf(
+                                navArgument("idInstruktur") { type = NavType.IntType },
+                                navArgument("nama") { type = NavType.StringType },
+                                navArgument("photoUrl") {
+                                    type = NavType.StringType
+                                    nullable = true
+                                }
+                            )
+                        ) { backStackEntry ->
+                            DashboardInstruktur(
+                                idInstruktur = backStackEntry.arguments?.getInt("idInstruktur") ?: -1,
+                                nama = backStackEntry.arguments?.getString("nama") ?: "",
+                                photoUrl = backStackEntry.arguments?.getString("photoUrl"),
+                                navController = navController
+                            )
+                        }
+                        composable(
+                            "jadwalKursus/{idInstruktur}",
+                            arguments = listOf(navArgument("idInstruktur") { type = NavType.IntType })
+                        ) { backStackEntry ->
+                            JadwalKursusScreen(
+                                navController = navController,
+                                idInstruktur = backStackEntry.arguments?.getInt("idInstruktur") ?: -1
+                            )
+                        }
+                        composable(
+                            "statusKursus/{idInstruktur}",
+                            arguments = listOf(navArgument("idInstruktur") { type = NavType.IntType })
+                        ) { backStackEntry ->
+                            StatusKursusScreen(
+                                navController = navController,
+                                idInstruktur = backStackEntry.arguments?.getInt("idInstruktur") ?: -1
+                            )
+                        }
+                        composable(
+                            route = "mapPeserta/{idPemesanan}",
+                            arguments = listOf(
+                                navArgument("idPemesanan") { type = NavType.IntType }
+                            )
+                        ) { backStackEntry ->
+                            val idPemesanan = backStackEntry.arguments?.getInt("idPemesanan")!!
+                            MapPesertaScreen(idPemesanan = idPemesanan, navController = navController)
+                        }
                     }
                 }
             }
@@ -139,7 +190,7 @@ fun LoginScreen(navController: NavController, modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { "" },
+            onClick = { navController.navigate("loginInstruktur") },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
             modifier = Modifier.fillMaxWidth().height(50.dp)
         ) {
@@ -156,6 +207,3 @@ fun GreetingPreview() {
         LoginScreen(navController)
     }
 }
-
-
-

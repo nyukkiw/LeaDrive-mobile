@@ -487,7 +487,7 @@ fun ListKursusScreen(navController: NavController) {
 
 // beri jarak besar agar muncul di bawah
 
-                        Double.MAX_VALUE / 4
+                        Double.MAX_VALUE
 
                     }
 
@@ -628,18 +628,13 @@ fun ListKursusScreen(navController: NavController) {
                                 Spacer(modifier = Modifier.height(4.dp))
 
                                 Text(
-
                                     text = "Jarak: ${
-
-                                        if (item.distanceKm.isFinite()) String.format("%.2f km", item.distanceKm)
-
-                                        else "—"
-
+                                        if (!item.distanceKm.isFinite() || item.distanceKm == Double.MAX_VALUE) "—"
+                                        else String.format("%.2f km", item.distanceKm)
                                     }",
-
                                     style = MaterialTheme.typography.bodySmall
-
                                 )
+
 
                             }
 
