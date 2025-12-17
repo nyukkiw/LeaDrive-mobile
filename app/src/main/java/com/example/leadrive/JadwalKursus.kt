@@ -39,7 +39,7 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
                     .select(
                         // Kita mengambil semua kolom pemesanan (*)
                         // DAN kolom username dari tabel users yang berelasi
-                        columns = Columns.list("*", "users(name)")
+                        columns = Columns.list("*", "users(name), jadwal_kursus(jam_mulai)")
                     )
                     .decodeList<Pemesanan>()
 
@@ -123,7 +123,6 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
                                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
-
                                     // TAMPILKAN USERNAME
                                     Text(
                                         text = "Nama Peserta : ${p.users?.name ?: "Tidak diketahui"}",
@@ -133,7 +132,16 @@ fun JadwalKursusScreen(navController: NavController, idInstruktur: Int) {
                                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                                     Text("ID Pemesanan: ${p.id_pemesanan}")
-                                    Text("Tanggal: ${p.tanggal_pemesanan ?: "-"}")
+                                    Text(
+                                        text = "Tanggal Kursus: ${p.jadwal_kursus?.firstOrNull()?.tanggal ?: "-"}",
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = "Jam Mulai: ${p.jadwal_kursus?.firstOrNull()?.jam_mulai ?: "-"}",
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
                                     Text("Status: ${p.status_pemesanan}")
 
                                     Spacer(Modifier.height(10.dp))

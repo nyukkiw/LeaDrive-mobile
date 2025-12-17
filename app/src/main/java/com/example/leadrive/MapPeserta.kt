@@ -31,6 +31,7 @@ import kotlinx.coroutines.withContext
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.config.Configuration
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
@@ -217,7 +218,7 @@ fun OSMRoutingMapView(startPoint: GeoPoint, endPoint: GeoPoint) {
             }
 
             // Agar peta otomatis zoom mencakup kedua titik (start & end)
-            // map.zoomToBoundingBox(BoundingBox.fromGeoPoints(listOf(startPoint, endPoint)), true)
+            map.zoomToBoundingBox(BoundingBox.fromGeoPoints(listOf(startPoint, endPoint)), true)
 
             map.invalidate()
         }

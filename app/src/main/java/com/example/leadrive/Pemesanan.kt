@@ -12,10 +12,17 @@ data class Pemesanan(
     val latitude: String? = null,
     val longitude: String? = null,
     @SerialName("users")
-    val users: Users? = null
+    val users: Users? = null,
+    val jadwal_kursus: List<JadwalKursus>? = null
 )
 
 @Serializable
 data class Users(
     val name: String? = null
+)
+
+@Serializable
+data class JadwalKursus(
+    val tanggal: String? = null,
+    val jam_mulai: String? = null
 )

@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
@@ -58,7 +59,7 @@ fun StatusKursusScreen(navController: NavController, idInstruktur: Int) {
             try {
                 Log.d("DEBUG_UI", "Fetching data...")
                 val result = supabase.from("jadwal_kursus") // Pastikan nama tabel benar
-                    .select(Columns.list("*", "pemesanan!inner(*)")) {
+                    .select(Columns.list("*", "pemesanan!inner(*, users(name))")) {
                         filter {
                             eq("id_instruktur", idInstruktur)
                             isIn("pemesanan.status_pemesanan", listOf("Diambil", "Progres"))
@@ -168,11 +169,21 @@ fun StatusKursusScreen(navController: NavController, idInstruktur: Int) {
                                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
-                                    Text("Jadwal ID: ${jadwal.id_jadwal}", style = MaterialTheme.typography.titleMedium)
+                                    Text(
+                                        text = "Peserta: ${p.users?.name ?: "Tanpa Nama"}",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                                     Text("ID Pemesanan: ${p.id_pemesanan}")
-                                    Text("Tanggal: ${p.tanggal_pemesanan}")
+                                    Text("Tanggal Kursus: ${jadwal.tanggal}")
+
+                                    Text(
+                                        text = "Jam Mulai: ${jadwal.jam_mulai ?: "-"}",
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
                                     Text("Status: ${p.status_pemesanan}", style = MaterialTheme.typography.bodyLarge)
 
                                     Spacer(Modifier.height(16.dp))
