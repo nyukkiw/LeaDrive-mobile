@@ -114,6 +114,9 @@ fun BerandaContent(navController: NavController) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
+
+    val prefs = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
+    val userName = prefs.getString("user_name", "User") ?: "User"
     // <= pastikan deklarasi loading ada
     var loading by remember { mutableStateOf(false) }
 
@@ -123,14 +126,11 @@ fun BerandaContent(navController: NavController) {
             .fillMaxSize()
             .padding(12.dp)
     ) {
-        TopBanner()
-        Spacer(modifier = Modifier.height(12.dp))
+//        TopBanner()
+//        Spacer(modifier = Modifier.height(12.dp))
 
-        KursusCard(
-            paket = "Paket: (nama paket)",
-            mobil = "Mobil: (Nama dan jenis)",
-            onDetailClick = {}
-        )
+        KursusCard(userName = userName)
+
 
         Spacer(modifier = Modifier.height(18.dp))
 
@@ -142,7 +142,7 @@ fun BerandaContent(navController: NavController) {
                 },
             onScheduleClick = {navController.navigate("lihat_jadwal")},
             onHistoryClick = { navController.navigate("riwayat_kursus") },
-            onProfileClick = { /* ... */ }
+
         )
 
         Spacer(modifier = Modifier.height(18.dp))
@@ -197,31 +197,34 @@ fun TopBanner() {
 }
 
 @Composable
-fun KursusCard(paket: String, mobil: String, onDetailClick: () -> Unit) {
+fun KursusCard(userName: String) {
     Surface(
         shape = RoundedCornerShape(12.dp),
         tonalElevation = 4.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(Modifier.padding(14.dp)) {
-            Text("Kursus sekarang", style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(8.dp))
-            Text(paket)
-            Text(mobil)
-            Spacer(Modifier.height(8.dp))
-            TextButton(onClick = onDetailClick) {
-                Text("Lihat detail kursus")
-            }
+        Column(Modifier.padding(16.dp)) {
+            Text(
+                text = "Selamat datang, $userName 👋",
+                style = MaterialTheme.typography.titleLarge
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = "Silakan pilih menu di bawah untuk melanjutkan",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray
+            )
         }
     }
 }
+
 
 @Composable
 fun ActionRow(
     onNearbyClick: () -> Unit,
     onScheduleClick: () -> Unit,
     onHistoryClick: () -> Unit,
-    onProfileClick: () -> Unit
+
 ) {
     Row(
         Modifier.fillMaxWidth(),
@@ -230,7 +233,7 @@ fun ActionRow(
         ActionItem(Icons.Default.Place, "Kursus\nterdekat", onNearbyClick)
         ActionItem(Icons.Default.CalendarMonth, "Lihat\njadwal", onScheduleClick)
         ActionItem(Icons.Default.History, "Riwayat\nkursus", onHistoryClick)
-        ActionItem(Icons.Default.Person, "Profil", onProfileClick)
+
     }
 }
 

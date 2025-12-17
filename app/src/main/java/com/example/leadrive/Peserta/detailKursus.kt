@@ -14,6 +14,53 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.unit.dp
+import kotlinx.serialization.Serializable
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.Order
+import com.example.leadrive.SupabaseClient
+import io.github.jan.supabase.postgrest.query.Columns
+import android.util.Log
+@Serializable
+data class RatingKursusResponse(
+    val rating: Int,
+    val komentar: String?,
+    val tanggal: String
+)
+
+
+
+suspend fun fetchRatingKursus(idKursus: Long): List<RatingKursusResponse> {
+    return SupabaseClient.client
+        .from("rating_ulasan")
+        .select(
+            columns = Columns.raw(
+                """
+                rating,
+                komentar,
+                tanggal
+                """
+            )
+        ) {
+            filter {
+                eq("id_kursus", idKursus)
+            }
+            order("tanggal", Order.DESCENDING)
+        }
+        .decodeList()
+}
+
+
+
+
+
+
 
 // ==== FUNGSI MAPS ====
 fun openMapsNavigation(context: Context, lat: Double, lng: Double, label: String) {
@@ -39,6 +86,10 @@ fun DetailKursusScreen(navController: NavController) {
     // ⬇️ ambil data yang dipilih dari holder DI listKursus.kt
     val kursus = SelectedKursusHolder.selected
 
+
+
+
+
     if (kursus == null) {
         LaunchedEffect(Unit) {
             Toast.makeText(context, "Data kursus tidak ditemukan", Toast.LENGTH_LONG).show()
@@ -46,6 +97,21 @@ fun DetailKursusScreen(navController: NavController) {
         }
         return
     }
+
+    var ratingList by remember { mutableStateOf<List<RatingKursusResponse>>(emptyList()) }
+    var loadingRating by remember { mutableStateOf(true) }
+
+
+    LaunchedEffect(kursus.id) {
+        ratingList = fetchRatingKursus(kursus.id.toLong())
+        loadingRating = false
+    }
+
+    Log.d("DETAIL_DEBUG", "kursus.id = ${kursus.id}")
+
+
+
+
 
     Scaffold(
         topBar = {
@@ -102,6 +168,51 @@ fun DetailKursusScreen(navController: NavController) {
             ) {
                 Text("Lihat / Pesan Jadwal")
             }
+
+            Divider()
+
+            Text(
+                "Ulasan & Rating",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            if (loadingRating) {
+                CircularProgressIndicator()
+            } else if (ratingList.isEmpty()) {
+                Text("Belum ada ulasan", color = Color.Gray)
+            } else {
+                ratingList.forEach { r ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+
+                            Row {
+                                repeat(r.rating) {
+                                    Icon(
+                                        Icons.Default.Star,
+                                        contentDescription = null,
+                                        tint = Color(0xFFFFC107)
+                                    )
+                                }
+                            }
+
+                            Spacer(Modifier.height(4.dp))
+
+                            Text(r.komentar ?: "-", style = MaterialTheme.typography.bodyMedium)
+
+                            Text(
+                                r.tanggal,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                }
+            }
+
+
         }
     }
 }

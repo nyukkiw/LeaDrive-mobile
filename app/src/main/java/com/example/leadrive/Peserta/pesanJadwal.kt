@@ -22,6 +22,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import androidx.compose.ui.graphics.Color
 
 // ================= HOLDER SESSION PEMBAYARAN =================
 object TempPembayaranHolder {
@@ -64,7 +65,7 @@ fun loadPaymentSession(context: Context) {
 fun PesanJadwalScreen(navController: NavController) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-
+    val kursus = SelectedKursusHolder.selected
     val paket = SelectedPaketHolder.selected
     if (paket == null) {
         LaunchedEffect(Unit) {
@@ -73,6 +74,10 @@ fun PesanJadwalScreen(navController: NavController) {
         }
         return
     }
+
+    val jamBuka = kursus?.jamBuka?.let { LocalTime.parse(it) }
+    val jamTutup = kursus?.jamTutup?.let { LocalTime.parse(it) }
+
 
     // load session lama kalau ada
     LaunchedEffect(Unit) {
@@ -97,10 +102,11 @@ fun PesanJadwalScreen(navController: NavController) {
 
     val today = remember { LocalDate.now() }
     val earliestDate = remember { today.plusDays(1) } // minimal besok
+    var sudahBayar by remember { mutableStateOf(false) }
 
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
     var selectedStartTime by remember { mutableStateOf<LocalTime?>(null) }
-    var selectedEndTime by remember { mutableStateOf<LocalTime?>(null) }
+//    var selectedEndTime by remember { mutableStateOf<LocalTime?>(null) }
 
     val dateFormatter = remember { DateTimeFormatter.ofPattern("dd MMM yyyy") }
 
@@ -133,17 +139,34 @@ fun PesanJadwalScreen(navController: NavController) {
         }.show()
     }
 
-    fun openTimePicker(isStart: Boolean) {
+    fun openTimePicker() {
         val now = LocalTime.now()
         TimePickerDialog(
             context,
             { _, hourOfDay, minute ->
                 val picked = LocalTime.of(hourOfDay, minute)
-                if (isStart) {
-                    selectedStartTime = picked
-                } else {
-                    selectedEndTime = picked
+
+                if (jamBuka != null && jamTutup != null) {
+                    if (picked.isBefore(jamBuka)) {
+                        Toast.makeText(
+                            context,
+                            "Jam mulai tidak boleh sebelum ${jamBuka}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        return@TimePickerDialog
+                    }
+
+                    if (picked.isAfter(jamTutup)) {
+                        Toast.makeText(
+                            context,
+                            "Jam mulai tidak boleh lewat ${jamTutup}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        return@TimePickerDialog
+                    }
                 }
+
+                selectedStartTime = picked
             },
             now.hour,
             now.minute,
@@ -151,9 +174,12 @@ fun PesanJadwalScreen(navController: NavController) {
         ).show()
     }
 
-    val canSubmit = selectedDate != null &&
-            selectedStartTime != null &&
-            selectedEndTime != null
+
+//    val canSubmit = selectedDate != null &&
+//            selectedStartTime != null &&
+//            selectedEndTime != null
+    val canSubmit = selectedDate != null && selectedStartTime != null
+
 
     Scaffold(
         topBar = {
@@ -182,6 +208,10 @@ fun PesanJadwalScreen(navController: NavController) {
             Text("Harga: Rp ${paket.harga}")
             Text("Durasi: ${paket.durasiJam} jam")
             Text("Jenis kendaraan: ${paket.jenisKendaraan ?: "-"}")
+            Text("Waktu buka: ${kursus?.jamBuka ?: "-"}")
+            Text("Waktu tutup: ${kursus?.jamTutup ?: "-"}")
+
+
 
             Spacer(Modifier.height(12.dp))
 
@@ -199,10 +229,23 @@ fun PesanJadwalScreen(navController: NavController) {
                 )
             }
 
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .clickable { openTimePicker(isStart = true) }
+//            ) {
+//                OutlinedTextField(
+//                    value = selectedStartTime?.toString() ?: "",
+//                    onValueChange = {},
+//                    enabled = false,
+//                    label = { Text("Jam mulai") },
+//                    modifier = Modifier.fillMaxWidth()
+//                )
+//            }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { openTimePicker(isStart = true) }
+                    .clickable { openTimePicker() }
             ) {
                 OutlinedTextField(
                     value = selectedStartTime?.toString() ?: "",
@@ -213,19 +256,20 @@ fun PesanJadwalScreen(navController: NavController) {
                 )
             }
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { openTimePicker(isStart = false) }
-            ) {
-                OutlinedTextField(
-                    value = selectedEndTime?.toString() ?: "",
-                    onValueChange = {},
-                    enabled = false,
-                    label = { Text("Jam selesai") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .clickable { openTimePicker(isStart = false) }
+//            ) {
+//                OutlinedTextField(
+//                    value = selectedEndTime?.toString() ?: "",
+//                    onValueChange = {},
+//                    enabled = false,
+//                    label = { Text("Jam selesai") },
+//                    modifier = Modifier.fillMaxWidth()
+//                )
+//            }
 
             Spacer(Modifier.height(16.dp))
 
@@ -247,7 +291,7 @@ fun PesanJadwalScreen(navController: NavController) {
                         TempPembayaranHolder.orderId = newOrderId
                         TempPembayaranHolder.tanggal = selectedDate?.toString()
                         TempPembayaranHolder.jamMulai = selectedStartTime?.toString()
-                        TempPembayaranHolder.jamSelesai = selectedEndTime?.toString()
+//                        TempPembayaranHolder.jamSelesai = selectedEndTime?.toString()
                         TempPembayaranHolder.redirectUrl = null
                         TempPembayaranHolder.pemesananSudahDibuat = false
 
@@ -302,6 +346,7 @@ fun PesanJadwalScreen(navController: NavController) {
                             Uri.parse(snap.redirectUrl)
                         )
                         context.startActivity(intent)
+                        sudahBayar=true
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -314,6 +359,10 @@ fun PesanJadwalScreen(navController: NavController) {
 
             // --- tombol CEK STATUS PEMBAYARAN ---
             Button(
+                enabled = sudahBayar,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (sudahBayar) MaterialTheme.colorScheme.primary else Color.Gray
+                ),
                 onClick = {
                     if (TempPembayaranHolder.orderId == null) {
                         Toast.makeText(
